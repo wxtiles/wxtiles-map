@@ -1,0 +1,23 @@
+{
+  "name": "wxtiles-map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "js": "browserify index.js -o dist.js --debug",
+    "css": "lessc --clean-css style.less dist.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wxtiles/wxtiles-map.git"
+  },
+  "author": "Troy Mare",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wxtiles/wxtiles-map/issues"
+  },
+  "homepage": "https://github.com/wxtiles/wxtiles-map#readme",
+  "dependencies": {
+    "query-string": "4.2.3"
+  }
+}
