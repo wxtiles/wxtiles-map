@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/wxtiles/wxtiles-map#readme",
   "dependencies": {
-    "query-string": "4.2.3"
+    "leaflet": "0.7.7",
+    "lodash": "4.15.0",
+    "query-string": "4.2.3",
+    "superagent": "2.2.0"
   }
 }
