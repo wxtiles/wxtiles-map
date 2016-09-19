@@ -4,20 +4,22 @@ var _ = require('lodash')
 var queryStrings = queryString.parse(location.search)
 var jsonDatums = JSON.parse(atob(queryStrings.datums))
 
+console.log(jsonDatums)
+
 var setupLeaflet = require('./setupLeaflet')
 var leafletInterface = setupLeaflet()
 
-_.forEach(jsonDatums.layerIds, function (layerId) {
+_.forEach(jsonDatums.mapDatums.layers, (layer) => {
   var wxTilesDotCom = 'https://api.wxtiles.com/'
   request
-    .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layerId)
+    .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id)
     .end((err, res) => {
       var layer = res.body
       var instances = _.sortBy(layer.instances, (instance) => { return instance.displayName }).reverse()
       var recentestInstance = instances[0]
 
       request
-        .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layerId + '/instance/' + recentestInstance.id)
+        .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + recentestInstance.id)
         .end((err, res) => {
           var times = res.body.times
           var someRandomTime = times[0]
