@@ -6,7 +6,10 @@ var jsonDatums = JSON.parse(jsongString)
 console.log(jsonDatums)
 
 var setupLeaflet = require('./setupLeaflet')
-var leafletInterface = setupLeaflet()
+var leafletInterface = setupLeaflet({
+  center: jsonDatums.mapDatums.center,
+  zoom: jsonDatums.mapDatums.zoom
+})
 
 _.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   var wxTilesDotCom = 'https://api.wxtiles.com/'
@@ -26,7 +29,10 @@ _.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
           var url = layer.resources.tile.replace('<instance>', recentestInstance.id).replace('<time>', someRandomTime)
           console.log(url)
           url = wxTilesDotCom + 'v0/' + url
-          leafletInterface.addLayer({url, opacity: mapDatumsLayer.opacity})
+          leafletInterface.addLayer({
+            url,
+            opacity: mapDatumsLayer.opacity
+          })
         })
     })
 })
