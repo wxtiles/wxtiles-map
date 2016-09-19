@@ -1,18 +1,17 @@
-var queryString = require('query-string')
 var request = require('superagent')
 var _ = require('lodash')
-var queryStrings = queryString.parse(location.search)
-var jsonDatums = JSON.parse(atob(queryStrings.datums))
+var jsongString = atob(window.location.href.split('?datums=')[1])
+var jsonDatums = JSON.parse(jsongString)
 
 console.log(jsonDatums)
 
 var setupLeaflet = require('./setupLeaflet')
 var leafletInterface = setupLeaflet()
 
-_.forEach(jsonDatums.mapDatums.layers, (layer) => {
+_.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   var wxTilesDotCom = 'https://api.wxtiles.com/'
   request
-    .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id)
+    .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
     .end((err, res) => {
       var layer = res.body
       var instances = _.sortBy(layer.instances, (instance) => { return instance.displayName }).reverse()
@@ -27,7 +26,7 @@ _.forEach(jsonDatums.mapDatums.layers, (layer) => {
           var url = layer.resources.tile.replace('<instance>', recentestInstance.id).replace('<time>', someRandomTime)
           console.log(url)
           url = wxTilesDotCom + 'v0/' + url
-          leafletInterface.addLayer(url)
+          leafletInterface.addLayer({url, opacity: mapDatumsLayer.opacity})
         })
     })
 })

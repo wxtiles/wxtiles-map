@@ -9,9 +9,10 @@ module.exports = function (options) {
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(leafletMap)
 
-  var addLayer = function(url) {
+  var addLayer = function({url, opacity}) {
     var leafletMapLayer = leaflet.tileLayer(url, {
-      tms: true
+      tms: true,
+      opacity: opacity
     });
     leafletMapLayer.addTo(leafletMap);
   }
