@@ -1,7 +1,11 @@
+var React = require('react')
+var ReactDOM = require('react-dom')
+var mapOverlay = require('./mapOverlay')
 var request = require('superagent')
 var _ = require('lodash')
 var jsongString = atob(window.location.href.split('?datums=')[1])
 var jsonDatums = JSON.parse(jsongString)
+
 
 console.log(jsonDatums)
 
@@ -33,6 +37,17 @@ _.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
             url,
             opacity: mapDatumsLayer.opacity
           })
+
+          var layerHandle = _.find(jsonDatums.mapDatums.layers, (findingLayer) => findingLayer.id == layer.id)
+          layerHandle.instanceId = recentestInstance.id
+          layerHandle.label = layer.meta.name
+
+          var mapOverlayMount = document.querySelector('#mapOverlayMount')
+          ReactDOM.render(React.createElement('div', {className: 'mapControlsContainer'},
+            React.createElement(mapOverlay, {
+              layers: jsonDatums.mapDatums.layers
+            })
+          ), mapOverlayMount)
         })
     })
 })
