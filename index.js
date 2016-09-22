@@ -6,9 +6,6 @@ var _ = require('lodash')
 var jsongString = atob(window.location.href.split('?datums=')[1])
 var jsonDatums = JSON.parse(jsongString)
 
-
-console.log(jsonDatums)
-
 var setupLeaflet = require('./setupLeaflet')
 var leafletInterface = setupLeaflet({
   center: jsonDatums.mapDatums.center,
@@ -31,8 +28,7 @@ _.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
           var someRandomTime = times[0]
 
           var url = layer.resources.tile.replace('<instance>', recentestInstance.id).replace('<time>', someRandomTime)
-          console.log(url)
-          url = wxTilesDotCom + 'v0/' + url
+          url = wxTilesDotCom + 'v0' + url
           leafletInterface.addLayer({
             url,
             opacity: mapDatumsLayer.opacity
