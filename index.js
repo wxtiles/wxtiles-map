@@ -31,7 +31,8 @@ _.forEach(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
           var withUrl = (url) => {
             leafletInterface.addLayer({
               url,
-              opacity: mapDatumsLayer.opacity
+              opacity: mapDatumsLayer.opacity,
+              zIndex: layer.zIndex
             })
 
             var layerHandle = _.find(jsonDatums.mapDatums.layers, (findingLayer) => findingLayer.id == layer.id)
