@@ -1,6 +1,5 @@
 var request = require('superagent')
-
-//const server = 'http://localhost:6060'
+var _ = require('lodash')
 const server = 'https://api.wxtiles.com/v0';
 
 
@@ -49,6 +48,20 @@ var getTileLayerUrl = ({layerId, instanceId, time, level, onSuccess, onError}) =
   onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png`)
 }
 
+var getAllTileLayerUrls = ({layerId, instanceId, times, level, onSuccess, onError}) => {
+  var urls = []
+  Promise.all(_.map(times, (time) => {
+    return new Promise((resolve, reject) => {
+      var scopedSuccess = (url) => {
+        resolve({time, url})
+      }
+      getTileLayerUrl({layerId, instanceId, time, level, onSuccess: scopedSuccess, onError})
+    })
+  })).then((timeUrls) => {
+    onSuccess(timeUrls)
+  })
+}
+
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
 var getLegendUrl = ({layerId, instanceId, onSuccess, onError}) => {
   onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png`)
@@ -70,4 +83,4 @@ googleMaps.getImageMapType = (layerTilesUrl) => {
   })
 }
 
-module.exports = {getAllLayers, getTimesForInstance, getTileLayerUrl, googleMaps, getInstance, getLegendUrl}
+module.exports = {getAllLayers, getTimesForInstance, getTileLayerUrl, googleMaps, getInstance, getLegendUrl, getAllTileLayerUrls}
