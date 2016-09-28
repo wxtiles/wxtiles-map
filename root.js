@@ -7,8 +7,7 @@ var _ = require('lodash')
 
 var calculateLayerBufferUsingTime = (mapOptions) => {
   var time = mapOptions.time
-  var layersToRender = mapOptions.layers
-  layersToRender = _.map(layersToRender, (layer) => {
+  _.forEach(mapOptions.layers, (layer) => {
     layer.timeUrlsToRender = _.filter(layer.timeUrls, (timeUrl) => {
       var earlyBounds = time.clone().add(-4, 'hour')
       var lateBounds = time.clone().add(4, 'hour')
@@ -16,8 +15,16 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
       if (timeUrl.time.isAfter(lateBounds)) return false
       return true
     })
-    console.log(layer)
-    return layer
+    layer.timeUrlsToRender = _.sortBy(layer.timeUrlsToRender, (timeUrl) => +timeUrl.time)
+    var layerHasVisibleTime = false
+    _.forEach(layer.timeUrlsToRender, (timeUrl) => {
+      timeUrl.isVisible = false
+      if (layerHasVisibleTime) return
+      if (timeUrl.time.isAfter(time)) {
+        layerHasVisibleTime = true
+        timeUrl.isVisible = true
+      }
+    })
   })
   return mapOptions
 }
