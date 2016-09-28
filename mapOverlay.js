@@ -7,6 +7,7 @@ class mapOverlay extends React.Component {
   constructor() {
     super()
     this.state = {}
+    this.state.time = null
   }
 
   componentWillMount() {
