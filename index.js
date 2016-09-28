@@ -7,6 +7,7 @@ var jsonDatums = JSON.parse(jsongString)
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
 var wxTilesDotCom = 'https://api.wxtiles.com/'
+var moment = require('moment-timezone')
 console.log(jsonDatums)
 
 var layers = []
@@ -29,7 +30,10 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
-              layer.timeUrls = timeUrls
+              layer.timeUrls = _.map(timeUrls, (timeUrl) => {
+                timeUrl.time = moment.utc(timeUrl.time, 'YYYY-MM-DDTHH:mm:ss[Z]')
+                return timeUrl
+              })
               resolve(layer)
             }
 
