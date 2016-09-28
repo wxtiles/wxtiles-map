@@ -19,8 +19,13 @@ class root extends React.Component {
   }
 
   render() {
+    var mapOptions = this.state.mapOptions
+    var mapWrapperProps = {
+      center: [mapOptions.center.lat, mapOptions.center.lng],
+      zoom: mapOptions.zoom
+    }
     return React.createElement('div', {className: 'root'},
-      React.createElement(mapWrapper)
+      React.createElement(mapWrapper, mapWrapperProps)
     )
   }
 }

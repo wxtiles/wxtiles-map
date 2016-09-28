@@ -12,15 +12,10 @@ class mapWrapper extends React.Component {
   }
 
   render() {
-//     this.state = {
-//   lat: -2,
-//   lng: 160,
-//   zoom: 2,
-// }
     var mapParams = {
       className: 'map',
-      center: [-2, 160],
-      zoom: 2
+      center: this.props.center,
+      zoom: this.props.zoom
     }
     return React.createElement('div', {className: 'mapWrapper'},
       React.createElement(reactLeaflet.Map, mapParams,
