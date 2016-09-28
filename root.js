@@ -1,6 +1,7 @@
 var React = require('react')
 var ReactDOM = require('react-dom')
 var mapWrapper = require('./mapWrapper')
+var mapOverlay = require('./mapOverlay')
 
 class root extends React.Component {
   constructor() {
@@ -20,12 +21,9 @@ class root extends React.Component {
 
   render() {
     var mapOptions = this.state.mapOptions
-    var mapWrapperProps = {
-      center: [mapOptions.center.lat, mapOptions.center.lng],
-      zoom: mapOptions.zoom
-    }
     return React.createElement('div', {className: 'root'},
-      React.createElement(mapWrapper, mapWrapperProps)
+      React.createElement(mapWrapper, mapOptions),
+      React.createElement(mapOverlay, mapOptions)
     )
   }
 }

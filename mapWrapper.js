@@ -12,6 +12,7 @@ class mapWrapper extends React.Component {
   }
 
   render() {
+    console.log(this.props)
     var mapParams = {
       className: 'map',
       center: this.props.center,
