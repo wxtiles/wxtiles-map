@@ -32,7 +32,10 @@ class legend extends React.Component {
 
   render() {
     return React.createElement('div', {className: 'legend'},
-      React.createElement('div', {}, this.props.label),
+      React.createElement('div', {},
+        React.createElement('div', {className: 'layerLabel'}, this.props.label),
+        React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
+      ),
       React.createElement('div', {className: 'switchWrapper'},
         React.createElement(rcSwitch, {
           onChange: this.toggleSwitch,
