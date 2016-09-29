@@ -8,7 +8,6 @@ class timeSlider extends React.Component {
     super()
     this.state = {}
     this.selectTime = this.selectTime.bind(this)
-    this.toggleAnimating = this.toggleAnimating.bind(this)
     this.doAnimationFrame = this.doAnimationFrame.bind(this)
   }
 
@@ -34,11 +33,6 @@ class timeSlider extends React.Component {
     this.props.selectTime({time: moment.utc(time)})
   }
 
-  toggleAnimating() {
-    var earliestTime = this.props.earliestTime
-    var latestTime = this.props.latestTime
-  }
-
   render() {
     var times = this.props.times
     var earliestTime = this.props.earliestTime
@@ -51,8 +45,8 @@ class timeSlider extends React.Component {
 
     return React.createElement('div', {className: 'timeSlider'},
       React.createElement('div', {},
-        !isAnimating && React.createElement('div', {onClick: this.toggleAnimating, className: 'glyphicon glyphicon-play'}),
-        isAnimating && React.createElement('div', {onClick: this.toggleAnimating, className: 'glyphicon glyphicon-pause'}),
+        !isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-play'}),
+        isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-pause'}),
         React.createElement('div', {className: 'reactSliderContainer'},
           React.createElement(rcSlider, {
             included: false,

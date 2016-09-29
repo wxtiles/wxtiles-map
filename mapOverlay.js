@@ -53,7 +53,7 @@ class mapOverlay extends React.Component {
       isAnimating: mapOptions.isAnimating,
       displayTime: mapOptions.displayTime,
       selectTime: this.selectTime,
-      toggleIsAnimating: this.toggleAnimation
+      toggleAnimation: this.toggleAnimation
     }
 
     return React.createElement('div', {className: 'mapControls'},

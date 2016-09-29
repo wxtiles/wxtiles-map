@@ -72,7 +72,6 @@ class root extends React.Component {
 
   updateMapOverlay({mapOptions}) {
     var mapOptions = calculateLayerBufferUsingTime(mapOptions)
-    console.log(mapOptions)
     this.setState({mapOptions})
   }
 
