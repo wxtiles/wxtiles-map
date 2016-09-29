@@ -52,5 +52,6 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   var mount = document.querySelector('#root')
   var mapOptions = jsonDatums.mapDatums
   mapOptions.layers = layers
+  mapOptions.now = moment.utc()
   ReactDOM.render(React.createElement(root, {mapOptions}), mount)
 })

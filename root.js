@@ -29,6 +29,23 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
   return mapOptions
 }
 
+var calculateAllTimes = (mapOptions) => {
+  mapOptions.times = []
+  _.forEach(mapOptions.layers, (layer) => {
+    _.forEach(layer.timeUrls, (timeUrl) => {
+      mapOptions.times.push(timeUrl.time)
+    })
+  })
+  mapOptions.times = _.sortBy(mapOptions.times, (time) => +time)
+  mapOptions.earliestTime = _.first(mapOptions.times)
+  mapOptions.latestTime = _.last(mapOptions.times)
+  mapOptions.marks = {}
+  _.forEach(mapOptions.times, (time) => {
+    mapOptions.marks[+time] = ''
+  })
+  return mapOptions
+}
+
 class root extends React.Component {
   constructor() {
     super()
@@ -36,16 +53,26 @@ class root extends React.Component {
     }
 
     this.update = this.update.bind(this)
+    this.updateMapOverlay = this.updateMapOverlay.bind(this)
   }
 
   componentWillMount() {
     var mapOptions = this.props.mapOptions
     mapOptions.time = moment.utc()
+    mapOptions.isAnimating = false
+    mapOptions.displayTime = mapOptions.time
     this.update({mapOptions})
   }
 
   update({mapOptions}) {
     var mapOptions = calculateLayerBufferUsingTime(mapOptions)
+    var mapOptions = calculateAllTimes(mapOptions)
+    this.setState({mapOptions})
+  }
+
+  updateMapOverlay({mapOptions}) {
+    var mapOptions = calculateLayerBufferUsingTime(mapOptions)
+    console.log(mapOptions)
     this.setState({mapOptions})
   }
 
@@ -53,7 +80,7 @@ class root extends React.Component {
     var mapOptions = this.state.mapOptions
     return React.createElement('div', {className: 'root'},
       React.createElement(mapWrapper, mapOptions),
-      React.createElement(mapOverlay, mapOptions)
+      React.createElement(mapOverlay, {mapOptions, update: this.updateMapOverlay})
     )
   }
 }
