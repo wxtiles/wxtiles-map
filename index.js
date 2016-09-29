@@ -9,6 +9,12 @@ var root = require('./root')
 var wxTilesDotCom = 'https://api.wxtiles.com/'
 var moment = require('moment-timezone')
 console.log(jsonDatums)
+if(!jsonDatums.mapDatums.center) {
+  jsonDatums.mapDatums.center = {
+    lat: 1, lng: 105
+  }
+  jsonDatums.mapDatums.zoom = 2
+}
 
 var layers = []
 Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
