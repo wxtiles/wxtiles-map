@@ -12,6 +12,7 @@ class mapOverlay extends React.Component {
     this.state.time = null
     this.toggleAnimation = this.toggleAnimation.bind(this)
     this.selectTime = this.selectTime.bind(this)
+    this.updateVisibleLayers = this.updateVisibleLayers.bind(this)
   }
 
   componentWillMount() {
@@ -29,6 +30,16 @@ class mapOverlay extends React.Component {
     this.props.update({mapOptions})
   }
 
+  updateVisibleLayers({layers}) {
+    var mapOptions = this.props.mapOptions
+    _.forEach(mapOptions.layers, (stateFulLayer) => {
+      _.forEach(layers, (legendLayer) => {
+        if (legendLayer.layerId == stateFulLayer.id) stateFulLayer.isVisible = legendLayer.isVisible
+      })
+    })
+    this.props.update({mapOptions})
+  }
+
   render() {
     var mapOptions = this.props.mapOptions
     var layers = mapOptions.layers
@@ -39,7 +50,8 @@ class mapOverlay extends React.Component {
         label: layer.label,
         url: layer.legendUrl,
         layerId: layer.id,
-        instanceId: layer.instanceId
+        instanceId: layer.instanceId,
+        isVisible: layer.isVisible
       }
     })
 
@@ -56,7 +68,7 @@ class mapOverlay extends React.Component {
     }
 
     return React.createElement('div', {className: 'mapControls'},
-      React.createElement(legends, {legends: legendsDatums}),
+      React.createElement(legends, {legends: legendsDatums, updateVisibleLayers: this.updateVisibleLayers}),
       React.createElement('div', {className: 'timeSliderWrapper'},
         React.createElement('div', {style: {marginLeft: 'auto', marginRight: 'auto', width: '700px'}},
           React.createElement(timeSlider, timeSliderProps)

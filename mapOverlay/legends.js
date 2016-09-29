@@ -10,6 +10,8 @@ class legends extends React.Component {
     this.state.showLegends = true
     this.showLegends = this.showLegends.bind(this)
     this.hideLegends = this.hideLegends.bind(this)
+    this.check = this.check.bind(this)
+    this.unCheck = this.unCheck.bind(this)
   }
 
   componentWillMount() {
@@ -23,6 +25,22 @@ class legends extends React.Component {
     this.setState({showLegends: false})
   }
 
+  check({layerId}) {
+    var layers = this.props.legends
+    _.forEach(layers, (layer) => {
+      if(layer.layerId == layerId) layer.isVisible = true
+    })
+    this.props.updateVisibleLayers({layers})
+  }
+
+  unCheck({layerId}) {
+    var layers = this.props.legends
+    _.forEach(layers, (layer) => {
+      if(layer.layerId == layerId) layer.isVisible = false
+    })
+    this.props.updateVisibleLayers({layers})
+  }
+
   render() {
     return this.props.legends.length > 0 && React.createElement('div', {className: 'legends'},
       React.createElement('div', {className: 'legends-control'},
@@ -34,7 +52,10 @@ class legends extends React.Component {
           React.createElement(legend, {
             layerId: legendDatums.layerId,
             instanceId: legendDatums.instanceId,
-            label: legendDatums.label
+            label: legendDatums.label,
+            isChecked: legendDatums.isVisible,
+            check: this.check,
+            unCheck: this.unCheck
           })
         )
       }),
