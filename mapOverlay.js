@@ -51,7 +51,6 @@ class mapOverlay extends React.Component {
       marks: mapOptions.marks,
       latestTime: mapOptions.latestTime,
       isAnimating: mapOptions.isAnimating,
-      displayTime: mapOptions.displayTime,
       selectTime: this.selectTime,
       toggleAnimation: this.toggleAnimation
     }

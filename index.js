@@ -40,6 +40,11 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
                 timeUrl.time = moment.utc(timeUrl.time, 'YYYY-MM-DDTHH:mm:ss[Z]')
                 return timeUrl
               })
+              layer.timeUrls = _.sortBy(layer.timeUrls, (timeUrl) => +timeUrl.time)
+              while(layer.timeUrls.length > 50) {
+                times = _.remove(times, (time, key) => key % 2 == 0)
+                layer.timeUrls = _.remove(layer.timeUrls, (timeUrl, key) => key % 2 == 0)
+              }
               resolve(layer)
             }
 

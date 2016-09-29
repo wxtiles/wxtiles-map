@@ -12,7 +12,7 @@ class timeSlider extends React.Component {
   }
 
   componentWillMount() {
-    setInterval(this.doAnimationFrame, 25)
+    setInterval(this.doAnimationFrame, 50)
   }
 
   doAnimationFrame() {
@@ -41,7 +41,7 @@ class timeSlider extends React.Component {
     if (!latestTime) latestTime = 1
     var marks = this.props.marks
     var isAnimating = this.props.isAnimating
-    var displayTime = this.props.displayTime
+    var displayTime = this.props.time
 
     return React.createElement('div', {className: 'timeSlider'},
       React.createElement('div', {},
