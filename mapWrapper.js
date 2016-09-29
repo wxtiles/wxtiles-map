@@ -18,7 +18,8 @@ class mapWrapper extends React.Component {
       zoom: this.props.zoom
     }
     var layers = this.props.layers
-    var tileLayersProps = _.map(layers, (layer) => {
+    var tileLayersProps = _.filter(layers, (layer) => layer.isVisible)
+    tileLayersProps = _.map(tileLayersProps, (layer) => {
       return _.map(layer.timeUrlsToRender, (timeUrl) => {
         var opacity = 0
         if (timeUrl.isVisible) opacity = layer.opacity

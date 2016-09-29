@@ -6,6 +6,7 @@ var moment = require('moment-timezone')
 var _ = require('lodash')
 
 var calculateLayerBufferUsingTime = (mapOptions) => {
+  console.log('calculate layer buffer time')
   var time = mapOptions.time
   _.forEach(mapOptions.layers, (layer) => {
     layer.timeUrlsToRender = _.filter(layer.timeUrls, (timeUrl) => {
@@ -30,6 +31,7 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
 }
 
 var calculateAllTimes = (mapOptions) => {
+  console.log('calculate all times')
   mapOptions.times = []
   _.forEach(mapOptions.layers, (layer) => {
     _.forEach(layer.timeUrls, (timeUrl) => {

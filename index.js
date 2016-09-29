@@ -31,6 +31,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
         layer.instanceId = instances[0].id
         layer.label = responseForLayer.meta.name
+        layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           .end((err, res) => {
