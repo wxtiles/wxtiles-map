@@ -9,8 +9,8 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
   var time = mapOptions.time
   _.forEach(mapOptions.layers, (layer) => {
     layer.timeUrlsToRender = _.filter(layer.timeUrls, (timeUrl) => {
-      var earlyBounds = time.clone().add(-4, 'hour')
-      var lateBounds = time.clone().add(4, 'hour')
+      var earlyBounds = time.clone().add(-6, 'hour')
+      var lateBounds = time.clone().add(12, 'hour')
       if (timeUrl.time.isBefore(earlyBounds)) return false
       if (timeUrl.time.isAfter(lateBounds)) return false
       return true
