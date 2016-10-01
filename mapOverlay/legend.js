@@ -10,6 +10,7 @@ class legend extends React.Component {
     this.state = {}
     this.state.url = null
     this.toggleSwitch = this.toggleSwitch.bind(this)
+    this.loadingError = this.loadingError.bind(this)
   }
 
   componentWillMount() {
@@ -30,6 +31,10 @@ class legend extends React.Component {
     if(!this.props.isChecked) this.props.check({layerId: this.props.layerId})
   }
 
+  loadingError() {
+    this.setState({url: null})
+  }
+
   render() {
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
@@ -44,8 +49,8 @@ class legend extends React.Component {
           unCheckedChildren: 'off'
         })
       ),
-      this.state.url && React.createElement('div', {className: 'imgWrapper'},
-        React.createElement('img', {src: this.state.url})
+      React.createElement('div', {className: 'imgWrapper'},
+        this.state.url && React.createElement('img', {src: this.state.url, onError: this.loadingError})
       )
     )
   }
