@@ -3,6 +3,7 @@ var ReactDOM = require('react-dom')
 var _ = require('lodash')
 var wxtilesjs = require('./wxtiles')
 var rcSwitch = require('rc-switch')
+var rcPopover = require('rc-popover')
 
 class legend extends React.Component {
   constructor() {
@@ -39,7 +40,9 @@ class legend extends React.Component {
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
         React.createElement('div', {className: 'layerLabel'}, this.props.label),
-        React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
+        React.createElement(rcPopover, {title: 'title', content: 'test'},
+          React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
+        )
       ),
       React.createElement('div', {className: 'switchWrapper'},
         React.createElement(rcSwitch, {
