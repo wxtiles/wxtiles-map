@@ -68201,7 +68201,6 @@ class root extends React.Component {
 
   componentWillMount() {
     var mapOptions = this.props.mapOptions
-    mapOptions.time = moment.utc()
     mapOptions.isAnimating = false
     mapOptions.displayTime = mapOptions.time
     this.update({mapOptions})
