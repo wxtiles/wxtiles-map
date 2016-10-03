@@ -51,7 +51,8 @@ class mapOverlay extends React.Component {
         url: layer.legendUrl,
         layerId: layer.id,
         instanceId: layer.instanceId,
-        isVisible: layer.isVisible
+        isVisible: layer.isVisible,
+        description: layer.description
       }
     })
 

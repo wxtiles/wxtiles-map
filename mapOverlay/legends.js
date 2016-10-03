@@ -55,7 +55,8 @@ class legends extends React.Component {
             label: legendDatums.label,
             isChecked: legendDatums.isVisible,
             check: this.check,
-            unCheck: this.unCheck
+            unCheck: this.unCheck,
+            description: legendDatums.description
           })
         )
       }),
