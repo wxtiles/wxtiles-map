@@ -2,7 +2,7 @@
   "name": "wxtiles-map",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "root.js",
   "scripts": {
     "js": "browserify index.js -g browserify-css -o dist.js",
     "css": "lessc --clean-css style.less dist.css"
