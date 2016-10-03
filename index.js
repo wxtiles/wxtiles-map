@@ -32,6 +32,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.instanceId = instances[0].id
         layer.label = responseForLayer.meta.name
         layer.description = responseForLayer.meta.description
+        layer.bounds = responseForLayer.bounds
         layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)

@@ -33,6 +33,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.instanceId = instances[0].id
         layer.label = responseForLayer.meta.name
         layer.description = responseForLayer.meta.description
+        layer.bounds = responseForLayer.bounds
         layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
@@ -453,6 +454,23 @@ module.exports = {getAllLayers, getTimesForInstance, getTileLayerUrl, googleMaps
 var React = require('react')
 var _ = require('lodash')
 var reactLeaflet = require('react-leaflet')
+var leaflet = require('leaflet')
+
+get_bounds = function (layer) {
+  if (layer.bounds.east > layer.bounds.west && (layer.bounds.west - layer.bounds.east) <= 0.5) {
+    // Valid
+    return leaflet.latLngBounds(
+        leaflet.latLng({lon: layer.bounds.east, lat: layer.bounds.north}),
+        leaflet.latLng({lon: layer.bounds.west, lat: layer.bounds.south})
+    )
+  } else {
+    // NOTE: hack workaround for layer bounds that are broken for some layers?
+    return leaflet.latLngBounds(
+        leaflet.latLng({lon: -180, lat: 90}),
+        leaflet.latLng({lon: 180, lat: -90})
+    )
+  }
+}
 
 class mapWrapper extends React.Component {
   constructor() {
@@ -475,12 +493,14 @@ class mapWrapper extends React.Component {
       return _.map(layer.timeUrlsToRender, (timeUrl) => {
         var opacity = 0
         if (timeUrl.isVisible) opacity = layer.opacity
+        console.log(get_bounds(layer))
         return {
           zIndex: layer.zIndex,
           opacity: opacity,
           url: timeUrl.url,
           key: layer.zIndex + ' ' + timeUrl.url,
-          tms: true
+          tms: true,
+          bounds: get_bounds(layer)
         }
       })
     })
@@ -492,7 +512,8 @@ class mapWrapper extends React.Component {
         }),
         React.createElement(reactLeaflet.TileLayer, {
           url: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-          subdomains: 'abcd'
+          subdomains: 'abcd',
+          zIndex: -1
         })
       )
     )
@@ -501,7 +522,7 @@ class mapWrapper extends React.Component {
 
 module.exports = mapWrapper
 
-},{"lodash":307,"react":533,"react-leaflet":382}],8:[function(require,module,exports){
+},{"leaflet":150,"lodash":307,"react":533,"react-leaflet":382}],8:[function(require,module,exports){
 /**
  * @ignore
  * base event object for custom and dom event.
