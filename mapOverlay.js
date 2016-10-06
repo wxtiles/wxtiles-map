@@ -44,7 +44,6 @@ class mapOverlay extends React.Component {
     var mapOptions = this.props.mapOptions
     var layers = mapOptions.layers
     layers = _.filter(layers, (layer) => layer != null)
-
     var legendsDatums = _.map(layers, (layer) => {
       return {
         label: layer.label,
@@ -52,7 +51,8 @@ class mapOverlay extends React.Component {
         layerId: layer.id,
         instanceId: layer.instanceId,
         isVisible: layer.isVisible,
-        description: layer.description
+        description: layer.description,
+        apikey: layer.apikey
       }
     })
 
