@@ -38,7 +38,13 @@ class mapWrapper extends React.Component {
     var layers = this.props.layers
     var tileLayersProps = _.filter(layers, (layer) => layer.isVisible)
     tileLayersProps = _.map(tileLayersProps, (layer) => {
-      return _.map(layer.timeUrlsToRender, (timeUrl) => {
+      var timeUrlsToRender = undefined
+      if (!this.props.isAnimating) {
+        timeUrlsToRender = _.filter(layer.timeUrlsToRender, (timeUrl) => timeUrl.isVisible)
+      } else {
+        timeUrlsToRender = layer.timeUrlsToRender
+      }
+      return _.map(timeUrlsToRender, (timeUrl) => {
         var opacity = 0
         if (timeUrl.isVisible) opacity = layer.opacity
         return {
