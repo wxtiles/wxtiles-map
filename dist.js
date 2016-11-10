@@ -29,7 +29,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
     }
     request
       .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
-      .set('apikey', jsonDatums.apiKey) // Set API key
+      // .set('apikey', jsonDatums.apiKey) // Set API key
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
