@@ -40,7 +40,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
-          .set('apikey', layer.apiKey) // Set API key
+          // .set('apikey', layer.apiKey) // Set API key
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
