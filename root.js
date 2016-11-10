@@ -21,9 +21,13 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
     _.forEach(layer.timeUrlsToRender, (timeUrl) => {
       timeUrl.isVisible = false
       if (layerHasVisibleTime) return
-      if (timeUrl.time.isAfter(time)) {
+      if (timeUrl.time.isSametime || timeUrl.time.isAfter(time)) {
         layerHasVisibleTime = true
         timeUrl.isVisible = true
+      }
+      if (layerHasVisibleTime === false) {
+        // No layer was made visible, pick the last
+        layer.timeUrlsToRender.slice(-1)[0].isVisible = true
       }
     })
   })
@@ -60,6 +64,7 @@ class root extends React.Component {
 
   componentWillMount() {
     var mapOptions = this.props.mapOptions
+    mapOptions.time = moment.utc()
     mapOptions.isAnimating = false
     mapOptions.displayTime = mapOptions.time
     this.update({mapOptions})

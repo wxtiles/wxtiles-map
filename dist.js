@@ -527,7 +527,7 @@ class mapWrapper extends React.Component {
         }),
         React.createElement(reactLeaflet.TileLayer, {
           url: 'https://api.mapbox.com/styles/v1/metocean/civblde3g001c2ipkwfs17qh3/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A',
-          zindex: 500
+          zIndex: 500
         }),
         React.createElement(reactLeaflet.TileLayer, {
           url: 'http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png',
@@ -68388,9 +68388,13 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
     _.forEach(layer.timeUrlsToRender, (timeUrl) => {
       timeUrl.isVisible = false
       if (layerHasVisibleTime) return
-      if (timeUrl.time.isAfter(time)) {
+      if (timeUrl.time.isSametime || timeUrl.time.isAfter(time)) {
         layerHasVisibleTime = true
         timeUrl.isVisible = true
+      }
+      if (layerHasVisibleTime === false) {
+        // No layer was made visible, pick the last
+        layer.timeUrlsToRender.slice(-1)[0].isVisible = true
       }
     })
   })
@@ -68427,6 +68431,7 @@ class root extends React.Component {
 
   componentWillMount() {
     var mapOptions = this.props.mapOptions
+    mapOptions.time = moment.utc()
     mapOptions.isAnimating = false
     mapOptions.displayTime = mapOptions.time
     this.update({mapOptions})
