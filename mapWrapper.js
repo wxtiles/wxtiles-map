@@ -38,7 +38,13 @@ class mapWrapper extends React.Component {
     var layers = this.props.layers
     var tileLayersProps = _.filter(layers, (layer) => layer.isVisible)
     tileLayersProps = _.map(tileLayersProps, (layer) => {
-      return _.map(layer.timeUrlsToRender, (timeUrl) => {
+      var timeUrlsToRender = undefined
+      if (!this.props.isAnimating) {
+        timeUrlsToRender = _.filter(layer.timeUrlsToRender, (timeUrl) => timeUrl.isVisible)
+      } else {
+        timeUrlsToRender = layer.timeUrlsToRender
+      }
+      return _.map(timeUrlsToRender, (timeUrl) => {
         var opacity = 0
         if (timeUrl.isVisible) opacity = layer.opacity
         return {
@@ -58,9 +64,13 @@ class mapWrapper extends React.Component {
           return React.createElement(reactLeaflet.TileLayer, tileLayerProps)
         }),
         React.createElement(reactLeaflet.TileLayer, {
-          url: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+          url: 'https://api.mapbox.com/styles/v1/metocean/civblde3g001c2ipkwfs17qh3/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A',
+          zindex: 500
+        }),
+        React.createElement(reactLeaflet.TileLayer, {
+          url: 'http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png',
           subdomains: 'abcd',
-          zIndex: -1
+          zIndex: 501
         })
       )
     )
