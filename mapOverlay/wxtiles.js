@@ -1,6 +1,7 @@
 var request = require('superagent')
 var _ = require('lodash')
 const server = 'https://api.wxtiles.com/v0';
+// const server = 'http://172.16.1.15/v0';
 
 
 // /<ownerID>/layer/
@@ -43,19 +44,20 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, instanceId, time, level, onSuccess, onError}) => {
+var getTileLayerUrl = ({layerId, instanceId, time, level, apikey, onSuccess, onError}) => {
   level = level || 0
-  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png`)
+  time = time || 0
+  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, instanceId, times, level, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
       var scopedSuccess = (url) => {
         resolve({time, url})
       }
-      getTileLayerUrl({layerId, instanceId, time, level, onSuccess: scopedSuccess, onError})
+      getTileLayerUrl({layerId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
     })
   })).then((timeUrls) => {
     onSuccess(timeUrls)
@@ -63,8 +65,8 @@ var getAllTileLayerUrls = ({layerId, instanceId, times, level, onSuccess, onErro
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, instanceId, onSuccess, onError}) => {
-  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png`)
+var getLegendUrl = ({layerId, instanceId, apikey, onSuccess, onError}) => {
+  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png?apikey=${apikey}`)
 }
 
 

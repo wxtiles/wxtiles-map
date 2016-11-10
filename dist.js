@@ -8,6 +8,7 @@ var jsonDatums = JSON.parse(jsongString)
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
 var wxTilesDotCom = 'https://api.wxtiles.com/'
+// var wxTilesDotCom = 'http://172.16.1.15/'
 var moment = require('moment-timezone')
 console.log(jsonDatums)
 if(!jsonDatums.mapDatums.center) {
@@ -23,10 +24,12 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
     var layer = {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
-      zIndex: mapDatumsLayer.zIndex
+      zIndex: mapDatumsLayer.zIndex,
+      apikey: jsonDatums.apiKey
     }
     request
       .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
+      .set('apikey', jsonDatums.apiKey) // Set API key
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
@@ -37,6 +40,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .set('apikey', layer.apiKey) // Set API key
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
@@ -57,6 +61,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
               instanceId: layer.instanceId,
               times,
               level: 0,
+              apikey: layer.apikey,
               onSuccess: acceptTimeUrls,
               onError: (err) => console.log(err)
             })
@@ -118,7 +123,6 @@ class mapOverlay extends React.Component {
     var mapOptions = this.props.mapOptions
     var layers = mapOptions.layers
     layers = _.filter(layers, (layer) => layer != null)
-
     var legendsDatums = _.map(layers, (layer) => {
       return {
         label: layer.label,
@@ -126,7 +130,8 @@ class mapOverlay extends React.Component {
         layerId: layer.id,
         instanceId: layer.instanceId,
         isVisible: layer.isVisible,
-        description: layer.description
+        description: layer.description,
+        apikey: layer.apikey
       }
     })
 
@@ -176,6 +181,7 @@ class legend extends React.Component {
     wxtilesjs.getLegendUrl({
       layerId: this.props.layerId,
       instanceId: this.props.instanceId,
+      apikey: this.props.apikey,
       onSuccess: (legendUrl) => {
         this.setState({url: legendUrl})
       },
@@ -273,6 +279,7 @@ class legends extends React.Component {
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
         return React.createElement('div', {key: legendDatums.layerId + ' ' + legendDatums.instanceId},
           React.createElement(legend, {
+            apikey: legendDatums.apikey,
             layerId: legendDatums.layerId,
             instanceId: legendDatums.instanceId,
             label: legendDatums.label,
@@ -366,6 +373,7 @@ module.exports = timeSlider
 var request = require('superagent')
 var _ = require('lodash')
 const server = 'https://api.wxtiles.com/v0';
+// const server = 'http://172.16.1.15/v0';
 
 
 // /<ownerID>/layer/
@@ -408,19 +416,20 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, instanceId, time, level, onSuccess, onError}) => {
+var getTileLayerUrl = ({layerId, instanceId, time, level, apikey, onSuccess, onError}) => {
   level = level || 0
-  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png`)
+  time = time || 0
+  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, instanceId, times, level, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
       var scopedSuccess = (url) => {
         resolve({time, url})
       }
-      getTileLayerUrl({layerId, instanceId, time, level, onSuccess: scopedSuccess, onError})
+      getTileLayerUrl({layerId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
     })
   })).then((timeUrls) => {
     onSuccess(timeUrls)
@@ -428,8 +437,8 @@ var getAllTileLayerUrls = ({layerId, instanceId, times, level, onSuccess, onErro
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, instanceId, onSuccess, onError}) => {
-  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png`)
+var getLegendUrl = ({layerId, instanceId, apikey, onSuccess, onError}) => {
+  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png?apikey=${apikey}`)
 }
 
 
@@ -517,9 +526,13 @@ class mapWrapper extends React.Component {
           return React.createElement(reactLeaflet.TileLayer, tileLayerProps)
         }),
         React.createElement(reactLeaflet.TileLayer, {
-          url: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+          url: 'https://api.mapbox.com/styles/v1/metocean/civblde3g001c2ipkwfs17qh3/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A',
+          zindex: 500
+        }),
+        React.createElement(reactLeaflet.TileLayer, {
+          url: 'http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png',
           subdomains: 'abcd',
-          zIndex: -1
+          zIndex: 501
         })
       )
     )

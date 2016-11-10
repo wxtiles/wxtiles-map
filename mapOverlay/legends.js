@@ -50,6 +50,7 @@ class legends extends React.Component {
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
         return React.createElement('div', {key: legendDatums.layerId + ' ' + legendDatums.instanceId},
           React.createElement(legend, {
+            apikey: legendDatums.apikey,
             layerId: legendDatums.layerId,
             instanceId: legendDatums.instanceId,
             label: legendDatums.label,

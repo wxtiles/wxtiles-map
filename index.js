@@ -7,6 +7,7 @@ var jsonDatums = JSON.parse(jsongString)
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
 var wxTilesDotCom = 'https://api.wxtiles.com/'
+// var wxTilesDotCom = 'http://172.16.1.15/'
 var moment = require('moment-timezone')
 console.log(jsonDatums)
 if(!jsonDatums.mapDatums.center) {
@@ -22,10 +23,12 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
     var layer = {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
-      zIndex: mapDatumsLayer.zIndex
+      zIndex: mapDatumsLayer.zIndex,
+      apikey: jsonDatums.apiKey
     }
     request
       .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
+      .set('apikey', jsonDatums.apiKey) // Set API key
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
@@ -36,6 +39,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.isVisible = true
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .set('apikey', layer.apiKey) // Set API key
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
@@ -56,6 +60,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
               instanceId: layer.instanceId,
               times,
               level: 0,
+              apikey: layer.apikey,
               onSuccess: acceptTimeUrls,
               onError: (err) => console.log(err)
             })
