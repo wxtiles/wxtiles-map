@@ -5,20 +5,22 @@
   "main": "root.js",
   "scripts": {
     "js": "browserify index.js -g browserify-css -o dist.js",
-    "css": "lessc --clean-css style.less dist.css"
+    "css": "lessc style.less dist.css",
+    "build": "npm run js && npm run css && echo Build Complete"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wxtiles/wxtiles-map.git"
   },
   "author": "Troy Mare",
-  "license": "ISC License",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/wxtiles/wxtiles-map/issues"
   },
   "homepage": "https://github.com/wxtiles/wxtiles-map#readme",
   "dependencies": {
     "leaflet": "0.7.7",
+    "less": "^2.7.1",
     "lodash": "4.15.0",
     "moment-timezone": "0.5.5",
     "rc-popover": "1.0.6",
