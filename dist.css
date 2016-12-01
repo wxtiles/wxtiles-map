@@ -24,7 +24,7 @@
 }
 .legend {
   text-align: center;
-  min-height: 70px;
+  min-height: 20px;
   border-top: 1px solid #bbb;
 }
 .legend .imgWrapper {

@@ -68640,7 +68640,6 @@ var calculateAllTimes = (mapOptions) => {
   _.forEach(mapOptions.times, (time) => {
     mapOptions.marks[+time] = ''
   })
-  console.log(mapOptions)
   return mapOptions
 }
 
