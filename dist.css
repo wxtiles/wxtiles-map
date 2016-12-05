@@ -14,10 +14,6 @@
   top: 30px;
   border-radius: 5px;
   text-align: center;
-  min-width: 380px;
-}
-.legends .legends-control {
-  font-size: 20px;
 }
 .legends .wxtilesPlug {
   border-top: 1px solid #bbb;
@@ -43,7 +39,8 @@
   display: none;
 }
 .legend img {
-  height: 70px;
+  max-width: 310px;
+  max-height: 80px;
 }
 .legend .layerLabel {
   display: inline;
@@ -55,6 +52,9 @@
 }
 .legendPopoverTitle {
   font-weight: bold;
+}
+.ant-popover-inner {
+  min-width: 200px;
 }
 .map {
   width: 100%;
