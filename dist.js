@@ -18,6 +18,26 @@ if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.zoom = 2
 }
 
+function degradeArray(array, options) {
+  _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
+  var offset = 2
+  var start = options.retainEnds ? array[0] : undefined
+  var end = options.retainEnds ? array[array.length - 1] : undefined
+  var maxLength = options.retainEnds ? options.maxLength - 2 : options.maxLength
+  var retArray = options.retainEnds ? array.slice(1,-1) : array
+  var i = null
+  while(retArray.length > maxLength) {
+    i = !options.fromLeftSide ? array.length - offset : offset - 1
+    if (array[i] != undefined) {
+      retArray = _.without(retArray, array[i])
+      offset += 2
+    } else {
+      return degradeArray(retArray, options)
+    }
+  }
+  return options.retainEnds ? [start].concat(retArray, [end]) : retArray
+}
+
 var layers = []
 Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   return new Promise((resolve, reject) => {
@@ -38,6 +58,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.description = responseForLayer.meta.description
         layer.bounds = responseForLayer.bounds
         layer.isVisible = true
+        layer.instanceType = responseForLayer.instanceType
         request
           .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           // .set('apikey', layer.apiKey) // Set API key
@@ -49,10 +70,14 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
                 return timeUrl
               })
               layer.timeUrls = _.sortBy(layer.timeUrls, (timeUrl) => +timeUrl.time)
-              while(layer.timeUrls.length > 50) {
-                times = _.remove(times, (time, key) => key % 2 == 0)
-                layer.timeUrls = _.remove(layer.timeUrls, (timeUrl, key) => key % 2 == 0)
-              }
+              // while(layer.timeUrls.length > 50) {
+              //   times = _.remove(times, (time, key) => key % 2 == 0)
+              //   layer.timeUrls = _.remove(layer.timeUrls, (timeUrl, key) => key % 2 == 0)
+              // }
+              console.log(layer)
+              layer.timeUrls = degradeArray(layer.timeUrls, {
+                fromLeftSide: layer.instanceType != 'observational' ? false : true
+              })
               resolve(layer)
             }
 
