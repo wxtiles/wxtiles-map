@@ -16,6 +16,9 @@ if(!jsonDatums.mapDatums.center) {
   }
   jsonDatums.mapDatums.zoom = 2
 }
+if(!jsonDatums.mapDatums.animationFrameMinutes) {
+  jsonDatums.mapDatums.animationFrameMinutes = 30 // TODO make function of available times
+}
 
 function degradeArray(array, options) {
   _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
