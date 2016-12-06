@@ -101,6 +101,10 @@
 .timeSlider .displayDate {
   padding-top: 4px;
 }
+.rc-slider-tooltip {
+  z-index: 1000;
+  position: relative;
+}
 .rc-slider {
   position: relative;
   height: 4px;

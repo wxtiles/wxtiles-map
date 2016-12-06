@@ -2,6 +2,7 @@ var React = require('react')
 var rcSlider = require('rc-slider')
 var moment = require('moment-timezone')
 var _ = require('lodash')
+var humanizeDuration = require('humanize-duration')
 
 class timeSlider extends React.Component {
   constructor() {
@@ -78,7 +79,15 @@ class timeSlider extends React.Component {
             max: +latestTime,
             value: +this.props.time,
             marks: marks,
-            tipFormatter: null,
+            tipFormatter: (tip) => {
+              var t = moment.duration(moment(tip).diff(moment())).asMilliseconds()
+              var args = {
+                'conjunction': ' and ',
+                'largest': Math.abs(t) > 3600000 ? 2 : 1,
+                'serialComma': false
+              }
+              return t > -60000 && t < 60000 ? 'now' : t < 0 ? humanizeDuration(t, args) + ' ago' : 'in ' + humanizeDuration(t, args)
+            },
             onChange: this.selectTime
           })
         )
