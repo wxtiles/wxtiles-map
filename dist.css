@@ -27,6 +27,10 @@
   width: 315px;
   display: inline-block;
 }
+.legend .imgWrapper img {
+  max-width: 310px;
+  max-height: 80px;
+}
 .legend .switchWrapper {
   position: relative;
   display: inline-block;
@@ -37,10 +41,6 @@
 }
 .legend .hideMeh {
   display: none;
-}
-.legend img {
-  max-width: 310px;
-  max-height: 80px;
 }
 .legend .layerLabel {
   display: inline;
