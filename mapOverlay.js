@@ -11,6 +11,7 @@ class mapOverlay extends React.Component {
     this.state = {}
     this.state.time = null
     this.toggleAnimation = this.toggleAnimation.bind(this)
+    this.adjustAnimationSpeed = this.adjustAnimationSpeed.bind(this)
     this.selectTime = this.selectTime.bind(this)
     this.updateVisibleLayers = this.updateVisibleLayers.bind(this)
   }
@@ -27,6 +28,12 @@ class mapOverlay extends React.Component {
   toggleAnimation() {
     var mapOptions = this.props.mapOptions
     mapOptions.isAnimating = !mapOptions.isAnimating
+    this.props.update({mapOptions})
+  }
+
+  adjustAnimationSpeed(minutes) {
+    var mapOptions = this.props.mapOptions
+    mapOptions.animationFrameMinutes = minutes
     this.props.update({mapOptions})
   }
 
@@ -64,8 +71,10 @@ class mapOverlay extends React.Component {
       marks: mapOptions.marks,
       latestTime: mapOptions.latestTime,
       isAnimating: mapOptions.isAnimating,
+      animationFrameMinutes: mapOptions.animationFrameMinutes,
       selectTime: this.selectTime,
-      toggleAnimation: this.toggleAnimation
+      toggleAnimation: this.toggleAnimation,
+      adjustAnimationSpeed: this.adjustAnimationSpeed
     }
 
     return React.createElement('div', {className: 'mapControls'},

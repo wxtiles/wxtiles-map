@@ -9,6 +9,9 @@ class timeSlider extends React.Component {
     this.state = {}
     this.selectTime = this.selectTime.bind(this)
     this.doAnimationFrame = this.doAnimationFrame.bind(this)
+    this.changeAnimationRate = this.changeAnimationRate.bind(this)
+    this.halveSpeed = this.halveSpeed.bind(this)
+    this.doubleSpeed = this.doubleSpeed.bind(this)
   }
 
   componentWillMount() {
@@ -21,12 +24,29 @@ class timeSlider extends React.Component {
     var latestTime = this.props.latestTime
     var earliestTime = this.props.earliestTime
     if(isAnimating) {
-      time.add(30, 'minute')
+      time.add(this.props.animationFrameMinutes, 'minute')
       if(time.isAfter(latestTime)) {
         time = earliestTime
       }
       this.selectTime(+time)
     }
+  }
+
+  changeAnimationRate(options) {
+    _.defaults(options, {rate: 1})
+    var mapOptions = this.props
+    var currentRate = mapOptions.animationFrameMinutes ? mapOptions.animationFrameMinutes : ((mapOptions.latestTime - mapOptions.earliestTime) / 1000 / 60) * 0.01
+    var maxRate = ((mapOptions.latestTime - mapOptions.earliestTime) / 1000 / 60) * 0.33
+    var newRate = _.clamp(currentRate * options.rate, 1, maxRate)
+    this.props.adjustAnimationSpeed(newRate)
+  }
+
+  halveSpeed(){
+    this.changeAnimationRate({rate: 0.5})
+  }
+
+  doubleSpeed(){
+    this.changeAnimationRate({rate: 2})
   }
 
   selectTime(time) {
@@ -45,8 +65,12 @@ class timeSlider extends React.Component {
 
     return React.createElement('div', {className: 'timeSlider'},
       React.createElement('div', {},
-        !isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-play'}),
-        isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-pause'}),
+        React.createElement('div', {className: 'animationControl'},
+          !isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-play'}),
+          isAnimating && React.createElement('div', {onClick: this.props.toggleAnimation, className: 'glyphicon glyphicon-pause'}),
+          React.createElement('div', {onClick: this.halveSpeed, className: 'speed-button glyphicon glyphicon-minus-sign'}),
+          React.createElement('div', {onClick: this.doubleSpeed, className: 'speed-button glyphicon glyphicon-plus-sign'})
+        ),
         React.createElement('div', {className: 'reactSliderContainer'},
           React.createElement(rcSlider, {
             included: false,
@@ -59,7 +83,7 @@ class timeSlider extends React.Component {
           })
         )
       ),
-      React.createElement('div', {}, displayTime.local().format('MMM DD - hh:mm a') + ' ' + moment.tz(moment.tz.guess()).format('z'))
+      React.createElement('div', {className: 'displayDate'}, displayTime.local().format('ddd MMM DD \u2014 hh:mm A') + ' ' + moment.tz(moment.tz.guess()).format('z'))
     )
   }
 }

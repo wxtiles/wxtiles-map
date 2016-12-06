@@ -6,10 +6,11 @@ var moment = require('moment-timezone')
 var _ = require('lodash')
 
 var calculateLayerBufferUsingTime = (mapOptions) => {
-  console.log('calculate layer buffer time')
+  // console.log('calculate layer buffer time')
   var time = mapOptions.time
   _.forEach(mapOptions.layers, (layer) => {
     layer.timeUrlsToRender = _.filter(layer.timeUrls, (timeUrl) => {
+      // TODO edit buffer to not be based on time
       var earlyBounds = time.clone().add(-6, 'hour')
       var lateBounds = time.clone().add(12, 'hour')
       if (timeUrl.time.isBefore(earlyBounds)) return false
@@ -35,7 +36,7 @@ var calculateLayerBufferUsingTime = (mapOptions) => {
 }
 
 var calculateAllTimes = (mapOptions) => {
-  console.log('calculate all times')
+  // console.log('calculate all times')
   mapOptions.times = []
   _.forEach(mapOptions.layers, (layer) => {
     _.forEach(layer.timeUrls, (timeUrl) => {
@@ -49,6 +50,14 @@ var calculateAllTimes = (mapOptions) => {
   _.forEach(mapOptions.times, (time) => {
     mapOptions.marks[+time] = ''
   })
+  return mapOptions
+}
+
+var calculateAnimationSpeed = (mapOptions) => {
+  mapOptions.times = _.sortBy(mapOptions.times, (time) => +time)
+  mapOptions.earliestTime = _.first(mapOptions.times)
+  mapOptions.latestTime = _.last(mapOptions.times)
+  mapOptions.animationFrameMinutes = mapOptions.animationFrameMinutes ? mapOptions.animationFrameMinutes: ((mapOptions.latestTime - mapOptions.earliestTime) / 1000 / 60) * 0.01
   return mapOptions
 }
 
@@ -73,11 +82,13 @@ class root extends React.Component {
   update({mapOptions}) {
     var mapOptions = calculateLayerBufferUsingTime(mapOptions)
     var mapOptions = calculateAllTimes(mapOptions)
+    var mapOptions = calculateAnimationSpeed(mapOptions)
     this.setState({mapOptions})
   }
 
   updateMapOverlay({mapOptions}) {
     var mapOptions = calculateLayerBufferUsingTime(mapOptions)
+    var mapOptions = calculateAnimationSpeed(mapOptions)
     this.setState({mapOptions})
   }
 

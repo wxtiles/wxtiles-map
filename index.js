@@ -69,11 +69,6 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
                 return timeUrl
               })
               layer.timeUrls = _.sortBy(layer.timeUrls, (timeUrl) => +timeUrl.time)
-              // while(layer.timeUrls.length > 50) {
-              //   times = _.remove(times, (time, key) => key % 2 == 0)
-              //   layer.timeUrls = _.remove(layer.timeUrls, (timeUrl, key) => key % 2 == 0)
-              // }
-              console.log(layer)
               layer.timeUrls = degradeArray(layer.timeUrls, {
                 fromLeftSide: layer.instanceType != 'observational' ? false : true
               })

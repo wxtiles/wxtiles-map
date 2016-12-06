@@ -85,6 +85,22 @@
 .timeSlider .glyphicon:hover {
   cursor: pointer;
 }
+.timeSlider .speed-button {
+  width: 20px;
+  font-size: 10px;
+  height: 10px;
+  top: auto;
+  bottom: -25px;
+}
+.timeSlider .glyphicon-minus-sign {
+  left: -55px;
+}
+.timeSlider .glyphicon-plus-sign {
+  left: -28px;
+}
+.timeSlider .displayDate {
+  padding-top: 4px;
+}
 .rc-slider {
   position: relative;
   height: 4px;
