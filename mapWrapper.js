@@ -34,7 +34,9 @@ class mapWrapper extends React.Component {
           url: timeUrl.url,
           key: layer.zIndex + ' ' + timeUrl.url,
           tms: true,
-          bounds: getBounds(layer)
+          bounds: getBounds(layer),
+          minZoom: layer.minZoom,
+          maxNativeZoom: layer.maxNativeZoom
         }
       })
     })

@@ -32,7 +32,7 @@ var root = require('./root')
 var wxTilesDotCom = 'https://api.wxtiles.com/'
 // var wxTilesDotCom = 'http://172.16.1.15/'
 var moment = require('moment-timezone')
-console.log(jsonDatums)
+console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.center = {
     lat: 1, lng: 105
@@ -82,6 +82,8 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.label = responseForLayer.meta.name
         layer.description = responseForLayer.meta.description
         layer.bounds = responseForLayer.bounds
+        layer.minZoom = responseForLayer.minNativeZoom,
+        layer.maxNativeZoom = responseForLayer.maxNativeZoom,
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
         request
@@ -583,7 +585,9 @@ class mapWrapper extends React.Component {
           url: timeUrl.url,
           key: layer.zIndex + ' ' + timeUrl.url,
           tms: true,
-          bounds: getBounds(layer)
+          bounds: getBounds(layer),
+          minZoom: layer.minZoom,
+          maxNativeZoom: layer.maxNativeZoom
         }
       })
     })
