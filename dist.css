@@ -43,7 +43,9 @@
   display: none;
 }
 .legend .layerLabel {
-  display: inline;
+  display: inline-block;
+  word-wrap: break-word;
+  max-width: 315px;
 }
 .legend .description {
   float: right;

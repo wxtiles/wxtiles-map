@@ -87,7 +87,7 @@ var calculateAllTimes = (mapOptions) => {
       label: "\u21E6"
     }
   } else if (+mapOptions.now > +_.last(mapOptions.times)) {
-    mapOptions.marks[+_.last(mapOptons.times)] = {
+    mapOptions.marks[+_.last(mapOptions.times)] = {
       style: {},
       label: "\u21E8"
     }
