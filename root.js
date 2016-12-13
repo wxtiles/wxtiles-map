@@ -81,6 +81,22 @@ var calculateAllTimes = (mapOptions) => {
   _.forEach(mapOptions.times, (time) => {
     mapOptions.marks[+time] = ''
   })
+  if (+mapOptions.now < +_.first(mapOptions.times)) {
+    mapOptions.marks[+_.first(mapOptions.times)] = {
+      style: {},
+      label: "\u21E6"
+    }
+  } else if (+mapOptions.now > +_.last(mapOptions.times)) {
+    mapOptions.marks[+_.last(mapOptons.times)] = {
+      style: {},
+      label: "\u21E8"
+    }
+  } else {
+    mapOptions.marks[+mapOptions.now] = {
+      style: {},
+      label: "\u21E7"
+    }
+  }
   return mapOptions
 }
 

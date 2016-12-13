@@ -72,6 +72,11 @@
   width: 100%;
   padding-left: 40px;
 }
+.timeSlider .reactSliderContainer .rc-slider-mark-text {
+  margin-top: -6px;
+  font-weight: bolder;
+  color: white;
+}
 .timeSlider .rc-tooltip-inner {
   z-index: 100;
 }
@@ -99,7 +104,7 @@
   left: -28px;
 }
 .timeSlider .displayDate {
-  padding-top: 4px;
+  padding-top: 10px;
 }
 .rc-slider-tooltip {
   z-index: 1000;
