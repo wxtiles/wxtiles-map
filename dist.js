@@ -69350,7 +69350,16 @@ class root extends React.Component {
 
   componentWillMount() {
     var mapOptions = this.props.mapOptions
+    var mapOptions = calculateAllTimes(mapOptions)
     mapOptions.time = moment.utc()
+    // Checks if defaulting to now is valid
+    if (!((+mapOptions.time >= +mapOptions.earliestTime) && (+mapOptions.time <= +mapOptions.latestTime))) {
+      if (+mapOptions.time < +mapOptions.earliestTime) {
+        mapOptions.time = mapOptions.earliestTime
+      } else {
+        mapOptions.time = mapOptions.latestTime
+      }
+    }
     mapOptions.isAnimating = false
     mapOptions.displayTime = mapOptions.time
     this.update({mapOptions})
