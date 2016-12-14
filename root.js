@@ -141,6 +141,8 @@ class root extends React.Component {
   }
 
   handleOnAfterChange({mapOptions}) {
+    // var mapOptions = calculateLayerBufferUsingTime(mapOptions)
+    // var mapOptions = calculateAnimationSpeed(mapOptions)
     this.setState({mapOptions})
   }
 
