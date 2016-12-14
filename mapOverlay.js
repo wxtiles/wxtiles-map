@@ -19,10 +19,15 @@ class mapOverlay extends React.Component {
   componentWillMount() {
   }
 
-  selectTime({time}) {
+  selectTime({time, ignore}) {
+    var ignore = ignore ? ignore : false
     var mapOptions = this.props.mapOptions
     mapOptions.time = time
-    this.props.update({mapOptions})
+    if (ignore) {
+      this.props.handleOnAfterChange({mapOptions})
+    } else {
+      this.props.update({mapOptions})
+    }
   }
 
   toggleAnimation() {

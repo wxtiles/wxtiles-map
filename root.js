@@ -116,6 +116,7 @@ class root extends React.Component {
 
     this.update = this.update.bind(this)
     this.updateMapOverlay = this.updateMapOverlay.bind(this)
+    this.handleOnAfterChange = this.handleOnAfterChange.bind(this)
   }
 
   componentWillMount() {
@@ -139,11 +140,15 @@ class root extends React.Component {
     this.setState({mapOptions})
   }
 
+  handleOnAfterChange({mapOptions}) {
+    this.setState({mapOptions})
+  }
+
   render() {
     var mapOptions = this.state.mapOptions
     return React.createElement('div', {className: 'root'},
       React.createElement(mapWrapper, mapOptions),
-      React.createElement(mapOverlay, {mapOptions, update: this.updateMapOverlay})
+      React.createElement(mapOverlay, {mapOptions, update: this.updateMapOverlay, handleOnAfterChange: this.handleOnAfterChange})
     )
   }
 }

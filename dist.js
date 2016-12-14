@@ -145,10 +145,15 @@ class mapOverlay extends React.Component {
   componentWillMount() {
   }
 
-  selectTime({time}) {
+  selectTime({time, ignore}) {
+    var ignore = ignore ? ignore : false
     var mapOptions = this.props.mapOptions
     mapOptions.time = time
-    this.props.update({mapOptions})
+    if (ignore) {
+      this.props.handleOnAfterChange({mapOptions})
+    } else {
+      this.props.update({mapOptions})
+    }
   }
 
   toggleAnimation() {
@@ -367,7 +372,8 @@ class timeSlider extends React.Component {
   constructor() {
     super()
     this.state = {}
-    this.selectTime = this.selectTime.bind(this)
+    this.handleOnChange = this.handleOnChange.bind(this)
+    this.handleOnAfterChange = this.handleOnAfterChange.bind(this)
     this.doAnimationFrame = this.doAnimationFrame.bind(this)
     this.changeAnimationRate = this.changeAnimationRate.bind(this)
     this.halveSpeed = this.halveSpeed.bind(this)
@@ -409,8 +415,12 @@ class timeSlider extends React.Component {
     this.changeAnimationRate({rate: 2})
   }
 
-  selectTime(time) {
-    this.props.selectTime({time: moment.utc(time)})
+  handleOnChange(time) {
+    this.props.selectTime({time: moment.utc(time), ignore: true})
+  }
+
+  handleOnAfterChange(time) {
+    this.props.selectTime({time: moment.utc(time), ignore: false})
   }
 
   render() {
@@ -447,7 +457,8 @@ class timeSlider extends React.Component {
               }
               return t > -60000 && t < 60000 ? 'now' : t < 0 ? humanizeDuration(t, args) + ' ago' : 'in ' + humanizeDuration(t, args)
             },
-            onChange: this.selectTime
+            onChange: this.handleOnChange,
+            onAfterChange: this.handleOnAfterChange
           })
         )
       ),
@@ -69334,6 +69345,7 @@ class root extends React.Component {
 
     this.update = this.update.bind(this)
     this.updateMapOverlay = this.updateMapOverlay.bind(this)
+    this.handleOnAfterChange = this.handleOnAfterChange.bind(this)
   }
 
   componentWillMount() {
@@ -69357,11 +69369,15 @@ class root extends React.Component {
     this.setState({mapOptions})
   }
 
+  handleOnAfterChange({mapOptions}) {
+    this.setState({mapOptions})
+  }
+
   render() {
     var mapOptions = this.state.mapOptions
     return React.createElement('div', {className: 'root'},
       React.createElement(mapWrapper, mapOptions),
-      React.createElement(mapOverlay, {mapOptions, update: this.updateMapOverlay})
+      React.createElement(mapOverlay, {mapOptions, update: this.updateMapOverlay, handleOnAfterChange: this.handleOnAfterChange})
     )
   }
 }
