@@ -1,8 +1,8 @@
 var request = require('superagent')
 var _ = require('lodash')
-const server = 'https://api.wxtiles.com/v0';
+// const server = 'https://api.wxtiles.com/v0';
 // const server = 'http://172.16.1.15/v0';
-
+const server = 'http://172.16.1.15/v1';
 
 // /<ownerID>/layer/
 var getAllLayers = (onSuccess, onError) => {
@@ -44,20 +44,20 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, instanceId, time, level, apikey, onSuccess, onError}) => {
+var getTileLayerUrl = ({layerId, styleId, instanceId, time, level, apikey, onSuccess, onError}) => {
   level = level || 0
   time = time || 0
-  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
+  onSuccess(`${server}/wxtiles/tile/${layerId}/${styleId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({layerId, styleId, instanceId, times, level, apikey, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
       var scopedSuccess = (url) => {
         resolve({time, url})
       }
-      getTileLayerUrl({layerId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
+      getTileLayerUrl({layerId, styleId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
     })
   })).then((timeUrls) => {
     onSuccess(timeUrls)
@@ -65,8 +65,8 @@ var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, instanceId, apikey, onSuccess, onError}) => {
-  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png?apikey=${apikey}`)
+var getLegendUrl = ({layerId, styleId, apikey, onSuccess, onError}) => {
+  onSuccess(`${server}/wxtiles/legend/${layerId}/${styleId}/small/horizontal.png?apikey=${apikey}`)
 }
 
 

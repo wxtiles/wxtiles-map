@@ -25,12 +25,17 @@ var React = require('react')
 var ReactDOM = require('react-dom')
 var request = require('superagent')
 var _ = require('lodash')
-var jsongString = atob(window.location.href.split('?datums=')[1])
-var jsonDatums = JSON.parse(jsongString)
+
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
-var wxTilesDotCom = 'https://api.wxtiles.com/'
-// var wxTilesDotCom = 'http://172.16.1.15/'
+
+var jsongString = atob(window.location.href.split('?datums=')[1])
+var jsonDatums = JSON.parse(jsongString)
+
+// var wxTilesDotCom = 'https://api.wxtiles.com/v0'
+// var wxTilesDotCom = 'http://172.16.1.15/v0'
+var wxTilesDotCom = 'http://172.16.1.15/v1'
+
 var moment = require('moment-timezone')
 console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
@@ -70,24 +75,26 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
       zIndex: mapDatumsLayer.zIndex,
-      apikey: jsonDatums.apiKey
+      apikey: jsonDatums.apiKey,
+      styleId: mapDatumsLayer.styleId // May be undefined
     }
     request
-      .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
+      .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
       // .set('apikey', jsonDatums.apiKey) // Set API key
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
         layer.instanceId = instances[0].id
-        layer.label = responseForLayer.meta.name
-        layer.description = responseForLayer.meta.description
+        layer.label = responseForLayer.name
+        layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
         layer.minZoom = responseForLayer.minNativeZoom,
         layer.maxNativeZoom = responseForLayer.maxNativeZoom,
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
+        layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
         request
-          .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           // .set('apikey', layer.apiKey) // Set API key
           .end((err, res) => {
             var times = res.body.times
@@ -106,6 +113,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
             wxtilesjs.getAllTileLayerUrls({
               layerId: layer.id,
               instanceId: layer.instanceId,
+              styleId: layer.styleId,
               times,
               level: 0,
               apikey: layer.apikey,
@@ -241,7 +249,7 @@ class legend extends React.Component {
   componentWillMount() {
     wxtilesjs.getLegendUrl({
       layerId: this.props.layerId,
-      instanceId: this.props.instanceId,
+      styleId: this.props.styleId,
       apikey: this.props.apikey,
       onSuccess: (legendUrl) => {
         this.setState({url: legendUrl})
@@ -262,11 +270,14 @@ class legend extends React.Component {
   }
 
   render() {
-    var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
+    // var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
         React.createElement('div', {className: 'layerLabel'}, this.props.label),
-        React.createElement(rcPopover, {title: popoverTitle, content: this.props.description, trigger: 'click'},
+        React.createElement(rcPopover, {
+          title: '', //popoverTitle, 
+          content: this.props.description,
+          trigger: 'click'},
           React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
         )
       ),
@@ -472,9 +483,9 @@ module.exports = timeSlider
 },{"humanize-duration":11,"lodash":169,"moment-timezone":180,"rc-slider":269,"react":615}],7:[function(require,module,exports){
 var request = require('superagent')
 var _ = require('lodash')
-const server = 'https://api.wxtiles.com/v0';
+// const server = 'https://api.wxtiles.com/v0';
 // const server = 'http://172.16.1.15/v0';
-
+const server = 'http://172.16.1.15/v1';
 
 // /<ownerID>/layer/
 var getAllLayers = (onSuccess, onError) => {
@@ -516,20 +527,20 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, instanceId, time, level, apikey, onSuccess, onError}) => {
+var getTileLayerUrl = ({layerId, styleId, instanceId, time, level, apikey, onSuccess, onError}) => {
   level = level || 0
   time = time || 0
-  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
+  onSuccess(`${server}/wxtiles/tile/${layerId}/${styleId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({layerId, styleId, instanceId, times, level, apikey, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
       var scopedSuccess = (url) => {
         resolve({time, url})
       }
-      getTileLayerUrl({layerId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
+      getTileLayerUrl({layerId, styleId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
     })
   })).then((timeUrls) => {
     onSuccess(timeUrls)
@@ -537,8 +548,8 @@ var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, instanceId, apikey, onSuccess, onError}) => {
-  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png?apikey=${apikey}`)
+var getLegendUrl = ({layerId, styleId, apikey, onSuccess, onError}) => {
+  onSuccess(`${server}/wxtiles/legend/${layerId}/${styleId}/small/horizontal.png?apikey=${apikey}`)
 }
 
 

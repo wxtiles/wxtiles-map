@@ -2,12 +2,17 @@ var React = require('react')
 var ReactDOM = require('react-dom')
 var request = require('superagent')
 var _ = require('lodash')
-var jsongString = atob(window.location.href.split('?datums=')[1])
-var jsonDatums = JSON.parse(jsongString)
+
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
-var wxTilesDotCom = 'https://api.wxtiles.com/'
-// var wxTilesDotCom = 'http://172.16.1.15/'
+
+var jsongString = atob(window.location.href.split('?datums=')[1])
+var jsonDatums = JSON.parse(jsongString)
+
+// var wxTilesDotCom = 'https://api.wxtiles.com/v0'
+// var wxTilesDotCom = 'http://172.16.1.15/v0'
+var wxTilesDotCom = 'http://172.16.1.15/v1'
+
 var moment = require('moment-timezone')
 console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
@@ -47,24 +52,26 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
       zIndex: mapDatumsLayer.zIndex,
-      apikey: jsonDatums.apiKey
+      apikey: jsonDatums.apiKey,
+      styleId: mapDatumsLayer.styleId // May be undefined
     }
     request
-      .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
+      .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
       // .set('apikey', jsonDatums.apiKey) // Set API key
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
         layer.instanceId = instances[0].id
-        layer.label = responseForLayer.meta.name
-        layer.description = responseForLayer.meta.description
+        layer.label = responseForLayer.name
+        layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
         layer.minZoom = responseForLayer.minNativeZoom,
         layer.maxNativeZoom = responseForLayer.maxNativeZoom,
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
+        layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
         request
-          .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           // .set('apikey', layer.apiKey) // Set API key
           .end((err, res) => {
             var times = res.body.times
@@ -83,6 +90,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
             wxtilesjs.getAllTileLayerUrls({
               layerId: layer.id,
               instanceId: layer.instanceId,
+              styleId: layer.styleId,
               times,
               level: 0,
               apikey: layer.apikey,
