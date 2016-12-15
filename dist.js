@@ -28,6 +28,7 @@ var _ = require('lodash')
 
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
+var v1transform = require('./v1concordance')
 
 var jsongString = atob(window.location.href.split('?datums=')[1])
 var jsonDatums = JSON.parse(jsongString)
@@ -47,6 +48,14 @@ if(!jsonDatums.mapDatums.center) {
 if(!jsonDatums.mapDatums.animationFrameMinutes) {
   jsonDatums.mapDatums.animationFrameMinutes = 30 // TODO make function of available times
 }
+jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
+  if (!layer.styleId) {
+    var concordance = v1transform(layer.id)
+    layer.id = concordance.layerId
+    layer.styleId = concordance.styleId
+  }
+  return layer
+})
 
 function degradeArray(array, options) {
   _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
@@ -131,7 +140,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   ReactDOM.render(React.createElement(root, {mapOptions}), mount)
 })
 
-},{"./mapOverlay/wxtiles":7,"./root":621,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410,"superagent":616}],3:[function(require,module,exports){
+},{"./mapOverlay/wxtiles":7,"./root":621,"./v1concordance":622,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410,"superagent":616}],3:[function(require,module,exports){
 var React = require('react')
 var ReactDOM = require('react-dom')
 var legends = require('./mapOverlay/legends')
@@ -178,9 +187,11 @@ class mapOverlay extends React.Component {
 
   updateVisibleLayers({layers}) {
     var mapOptions = this.props.mapOptions
-    _.forEach(mapOptions.layers, (stateFulLayer) => {
+    _.forEach(mapOptions.layers, (statefulLayer) => {
       _.forEach(layers, (legendLayer) => {
-        if (legendLayer.layerId == stateFulLayer.id) stateFulLayer.isVisible = legendLayer.isVisible
+        if ((legendLayer.layerId == statefulLayer.id) && (legendLayer.styleId == statefulLayer.styleId)) {
+          statefulLayer.isVisible = legendLayer.isVisible
+        }
       })
     })
     this.props.update({mapOptions})
@@ -195,7 +206,7 @@ class mapOverlay extends React.Component {
         label: layer.label,
         url: layer.legendUrl,
         layerId: layer.id,
-        instanceId: layer.instanceId,
+        styleId: layer.styleId,
         isVisible: layer.isVisible,
         description: layer.description,
         apikey: layer.apikey
@@ -261,8 +272,8 @@ class legend extends React.Component {
   }
 
   toggleSwitch() {
-    if(this.props.isChecked) this.props.unCheck({layerId: this.props.layerId})
-    if(!this.props.isChecked) this.props.check({layerId: this.props.layerId})
+    if(this.props.isChecked) this.props.unCheck({layerId: this.props.layerId, styleId: this.props.styleId})
+    if(!this.props.isChecked) this.props.check({layerId: this.props.layerId, styleId: this.props.styleId})
   }
 
   loadingError() {
@@ -275,7 +286,7 @@ class legend extends React.Component {
       React.createElement('div', {},
         React.createElement('div', {className: 'layerLabel'}, this.props.label),
         React.createElement(rcPopover, {
-          title: '', //popoverTitle, 
+          title: '', //popoverTitle, // TODO style description?
           content: this.props.description,
           trigger: 'click'},
           React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
@@ -326,18 +337,22 @@ class legends extends React.Component {
     this.setState({showLegends: false})
   }
 
-  check({layerId}) {
+  check({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = true
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = true
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
 
-  unCheck({layerId}) {
+  unCheck({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = false
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = false
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
@@ -349,11 +364,11 @@ class legends extends React.Component {
         this.state.showLegends && React.createElement('a', {href: 'javascript:void(0);', onClick: this.hideLegends}, 'Hide legends')
       ),
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
-        return React.createElement('div', {key: legendDatums.layerId + ' ' + legendDatums.instanceId},
+        return React.createElement('div', {key: [legendDatums.layerId, legendDatums.styleId].join(' ')},
           React.createElement(legend, {
             apikey: legendDatums.apikey,
             layerId: legendDatums.layerId,
-            instanceId: legendDatums.instanceId,
+            styleId: legendDatums.styleId,
             label: legendDatums.label,
             isChecked: legendDatums.isVisible,
             check: this.check,
@@ -69406,4 +69421,33 @@ class root extends React.Component {
 
 module.exports = root
 
-},{"./mapOverlay":3,"./mapWrapper":8,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410}]},{},[2]);
+},{"./mapOverlay":3,"./mapWrapper":8,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410}],622:[function(require,module,exports){
+const CONCORDANCE = {
+  "ncep-mrms-us-reflectivity-dbz": {
+    layerId: "mrms-reflectivity", styleId: "reflectivity"
+  },
+  "ncep-mrms-us-lightning-prob": {
+    layerId: "mrms-lightning-probability", styleId: "probability"
+  },
+  "ncep-ndfd-us-windspd-knots": {
+    layerId: "ndfd-wind", styleId: "wind-speed"
+  },
+  "ncep-ndfd-us-windgust-knots": {
+    layerId: "ndfd-windgust", styleId: "wind-speed"
+  },
+  "ncep-ndfd-us-winddir": {
+    layerId: "ndfd-wind", styleId: "wind-direction"
+  },
+  "ncep-gfs-global-mslp-si": {
+    layerId: "ncep-mslp", styleId: "atmospheric-pressure-unfilled-mono"
+  }
+}
+
+var v1transform = function (layerId) {
+  var concord = CONCORDANCE[layerId]
+  return concord ? concord : {layerId: layerId, styleId: undefined}
+}
+
+module.exports = v1transform
+
+},{}]},{},[2]);

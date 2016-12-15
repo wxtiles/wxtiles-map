@@ -25,18 +25,22 @@ class legends extends React.Component {
     this.setState({showLegends: false})
   }
 
-  check({layerId}) {
+  check({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = true
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = true
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
 
-  unCheck({layerId}) {
+  unCheck({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = false
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = false
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
@@ -48,11 +52,11 @@ class legends extends React.Component {
         this.state.showLegends && React.createElement('a', {href: 'javascript:void(0);', onClick: this.hideLegends}, 'Hide legends')
       ),
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
-        return React.createElement('div', {key: legendDatums.layerId + ' ' + legendDatums.instanceId},
+        return React.createElement('div', {key: [legendDatums.layerId, legendDatums.styleId].join(' ')},
           React.createElement(legend, {
             apikey: legendDatums.apikey,
             layerId: legendDatums.layerId,
-            instanceId: legendDatums.instanceId,
+            styleId: legendDatums.styleId,
             label: legendDatums.label,
             isChecked: legendDatums.isVisible,
             check: this.check,

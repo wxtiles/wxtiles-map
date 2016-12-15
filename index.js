@@ -5,6 +5,7 @@ var _ = require('lodash')
 
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
+var v1transform = require('./v1concordance')
 
 var jsongString = atob(window.location.href.split('?datums=')[1])
 var jsonDatums = JSON.parse(jsongString)
@@ -24,6 +25,14 @@ if(!jsonDatums.mapDatums.center) {
 if(!jsonDatums.mapDatums.animationFrameMinutes) {
   jsonDatums.mapDatums.animationFrameMinutes = 30 // TODO make function of available times
 }
+jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
+  if (!layer.styleId) {
+    var concordance = v1transform(layer.id)
+    layer.id = concordance.layerId
+    layer.styleId = concordance.styleId
+  }
+  return layer
+})
 
 function degradeArray(array, options) {
   _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
