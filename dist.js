@@ -38,7 +38,7 @@ var jsonDatums = JSON.parse(jsongString)
 var wxTilesDotCom = 'http://172.16.1.15/v1'
 
 var moment = require('moment-timezone')
-console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
+console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, styleId, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.center = {
     lat: 1, lng: 105
@@ -97,11 +97,12 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.label = responseForLayer.name
         layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
-        layer.minZoom = responseForLayer.minNativeZoom,
-        layer.maxNativeZoom = responseForLayer.maxNativeZoom,
+        layer.minZoom = responseForLayer.minNativeZoom
+        layer.maxNativeZoom = responseForLayer.maxNativeZoom
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
         layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
+        layer.styles = responseForLayer.styles
         request
           .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           // .set('apikey', layer.apiKey) // Set API key
@@ -201,6 +202,7 @@ class mapOverlay extends React.Component {
     var mapOptions = this.props.mapOptions
     var layers = mapOptions.layers
     layers = _.filter(layers, (layer) => layer != null)
+    console.log('>>', layers[0].styles)
     var legendsDatums = _.map(layers, (layer) => {
       return {
         label: layer.label,
@@ -209,6 +211,7 @@ class mapOverlay extends React.Component {
         styleId: layer.styleId,
         isVisible: layer.isVisible,
         description: layer.description,
+        styles: layer.styles,
         apikey: layer.apikey
       }
     })
@@ -284,10 +287,13 @@ class legend extends React.Component {
     // var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
-        React.createElement('div', {className: 'layerLabel'}, this.props.label),
+        React.createElement('div', {className: 'legendText'},
+          React.createElement('div', {className: 'layerLabel'}, this.props.label),
+          React.createElement('div', {className: 'styleLabel'}, this.props.style.name)
+        ),
         React.createElement(rcPopover, {
-          title: '', //popoverTitle, // TODO style description?
-          content: this.props.description,
+          title: this.props.description || this.props.label, //popoverTitle, // TODO style description?
+          content: this.props.style.description || this.props.style.label || '',
           trigger: 'click'},
           React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
         )
@@ -364,6 +370,7 @@ class legends extends React.Component {
         this.state.showLegends && React.createElement('a', {href: 'javascript:void(0);', onClick: this.hideLegends}, 'Hide legends')
       ),
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
+        console.log('>>>', legendDatums.styles, legendDatums.styleId, _.find(legendDatums.styles, (style) => {return style.id == legendDatums.styleId}))
         return React.createElement('div', {key: [legendDatums.layerId, legendDatums.styleId].join(' ')},
           React.createElement(legend, {
             apikey: legendDatums.apikey,
@@ -373,7 +380,8 @@ class legends extends React.Component {
             isChecked: legendDatums.isVisible,
             check: this.check,
             unCheck: this.unCheck,
-            description: legendDatums.description
+            description: legendDatums.description,
+            style: _.find(legendDatums.styles, (style) => {return style.id == legendDatums.styleId})
           })
         )
       }),

@@ -15,7 +15,7 @@ var jsonDatums = JSON.parse(jsongString)
 var wxTilesDotCom = 'http://172.16.1.15/v1'
 
 var moment = require('moment-timezone')
-console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
+console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, styleId, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.center = {
     lat: 1, lng: 105
@@ -74,11 +74,12 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.label = responseForLayer.name
         layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
-        layer.minZoom = responseForLayer.minNativeZoom,
-        layer.maxNativeZoom = responseForLayer.maxNativeZoom,
+        layer.minZoom = responseForLayer.minNativeZoom
+        layer.maxNativeZoom = responseForLayer.maxNativeZoom
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
         layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
+        layer.styles = responseForLayer.styles
         request
           .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
           // .set('apikey', layer.apiKey) // Set API key

@@ -41,10 +41,13 @@ class legend extends React.Component {
     // var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
-        React.createElement('div', {className: 'layerLabel'}, this.props.label),
+        React.createElement('div', {className: 'legendText'},
+          React.createElement('div', {className: 'layerLabel'}, this.props.label),
+          React.createElement('div', {className: 'styleLabel'}, this.props.style.name)
+        ),
         React.createElement(rcPopover, {
-          title: '', //popoverTitle, // TODO style description?
-          content: this.props.description,
+          title: this.props.description || this.props.label, //popoverTitle, // TODO style description?
+          content: this.props.style.description || this.props.style.label || '',
           trigger: 'click'},
           React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
         )

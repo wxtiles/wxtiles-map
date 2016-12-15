@@ -27,10 +27,21 @@
     display: none;
   }
 
-  .layerLabel {
+  .legendText {
     display: inline-block;
+    max-width: 315px;
+  }
+
+  .layerLabel {
     word-wrap: break-word;
     max-width: 315px;
+  }
+
+  .styleLabel {
+    font-size: smaller;
+    color: #176097;
+    max-width: 270px;
+    word-wrap: break-word;
   }
 
   .description {
@@ -45,8 +56,19 @@
 }
 
 .ant-popover {
-  margin-right: 5px;
+  max-width: 500px;
+
+  .ant-popover-title {
+    font-weight: bold;
+    height: auto;
+    line-height: inherit;
+    min-height: 34px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
   .ant-popover-inner {
     min-width: 200px;
+    margin-right: 5px;
   }
 }

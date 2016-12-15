@@ -52,6 +52,7 @@ class legends extends React.Component {
         this.state.showLegends && React.createElement('a', {href: 'javascript:void(0);', onClick: this.hideLegends}, 'Hide legends')
       ),
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
+        console.log('>>>', legendDatums.styles, legendDatums.styleId, _.find(legendDatums.styles, (style) => {return style.id == legendDatums.styleId}))
         return React.createElement('div', {key: [legendDatums.layerId, legendDatums.styleId].join(' ')},
           React.createElement(legend, {
             apikey: legendDatums.apikey,
@@ -61,7 +62,8 @@ class legends extends React.Component {
             isChecked: legendDatums.isVisible,
             check: this.check,
             unCheck: this.unCheck,
-            description: legendDatums.description
+            description: legendDatums.description,
+            style: _.find(legendDatums.styles, (style) => {return style.id == legendDatums.styleId})
           })
         )
       }),
