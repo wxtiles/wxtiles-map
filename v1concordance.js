@@ -9,7 +9,7 @@ const CONCORDANCE = {
     layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-barbs"
   },
   "ncep-gfs-global-wind-knots": {
-    layerId: "", styleId: "wind-speed-direction"
+    layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-msl-classic"
   },
   "ncep-gfs-global-temp-si": {
     layerId: "ncep-gfs-global-temp", styleId: "temperature-msl-classic"
