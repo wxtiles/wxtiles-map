@@ -65,7 +65,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
     }
     request
       .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
-      // .set('apikey', jsonDatums.apiKey) // Set API key
+      .set('apikey', jsonDatums.apiKey)
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
@@ -81,7 +81,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.styles = responseForLayer.styles
         request
           .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
-          // .set('apikey', layer.apiKey) // Set API key
+          .set('apikey', jsonDatums.apiKey)
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {

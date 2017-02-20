@@ -53,6 +53,7 @@ jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
     layer.id = concordance.layerId
     layer.styleId = concordance.styleId
   }
+  console.log(layer)
   return layer
 })
 
@@ -88,7 +89,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
     }
     request
       .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
-      // .set('apikey', jsonDatums.apiKey) // Set API key
+      .set('apikey', jsonDatums.apiKey)
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
@@ -104,7 +105,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
         layer.styles = responseForLayer.styles
         request
           .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
-          // .set('apikey', layer.apiKey) // Set API key
+          .set('apikey', jsonDatums.apiKey)
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
@@ -507,18 +508,20 @@ var _ = require('lodash')
 const server = 'http://172.16.1.50/v1';
 
 // /<ownerID>/layer/
-var getAllLayers = (onSuccess, onError) => {
+var getAllLayers = (apikey, onSuccess, onError) => {
   request
     .get(`${server}/wxtiles/layer/`)
+    .set('apikey', apikey)
     .end((err, res) => {
       if (err) return onError(err)
       onSuccess(JSON.parse(res.text))
     })
 }
 
-var getInstance = ({layerId, instanceId, onSuccess, onError}) => {
+var getInstance = ({apikey, layerId, instanceId, onSuccess, onError}) => {
   request
     .get(`${server}/wxtiles/layer/${layerId}/instance/${instanceId}/`)
+    .set('apikey', apikey)
     .end((err, res) => {
       if (err) return onError(err)
       onSuccess(res.body)
@@ -529,6 +532,7 @@ var getInstance = ({layerId, instanceId, onSuccess, onError}) => {
 var getTimesForInstance = (options) => {
   request
     .get(`${server}/wxtiles/layer/${options.layerId}/instance/${options.instanceId}/times/`)
+    .set('apikey', options.apikey)
     .end((err, res) => {
       if (err) return options.onError(err)
       options.onSuccess(JSON.parse(res.text))
@@ -539,6 +543,7 @@ var getTimesForInstance = (options) => {
 var getLevelsForInstance = (options) => {
   request
     .get(`${server}/wxtiles/layer/${options.layerId}/instance/${options.instanceId}/levels/`)
+    .set('apikey', options.apikey)
     .end((err, res) => {
       if (err) return options.onError(err)
       options.onSuccess(JSON.parse(res.text))
@@ -546,13 +551,13 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, styleId, instanceId, time, level, apikey, onSuccess, onError}) => {
+var getTileLayerUrl = ({apikey, layerId, styleId, instanceId, time, level, onSuccess, onError}) => {
   level = level || 0
   time = time || 0
   onSuccess(`${server}/wxtiles/tile/${layerId}/${styleId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, styleId, instanceId, times, level, apikey, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({apikey, layerId, styleId, instanceId, times, level, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
@@ -567,7 +572,7 @@ var getAllTileLayerUrls = ({layerId, styleId, instanceId, times, level, apikey, 
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, styleId, apikey, onSuccess, onError}) => {
+var getLegendUrl = ({apikey, layerId, styleId, onSuccess, onError}) => {
   onSuccess(`${server}/wxtiles/legend/${layerId}/${styleId}/small/horizontal.png?apikey=${apikey}`)
 }
 
@@ -69428,34 +69433,34 @@ module.exports = root
 },{"./mapOverlay":3,"./mapWrapper":8,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410}],622:[function(require,module,exports){
 const CONCORDANCE = {
   "sat-sst": {
-    layerId: "sat-sst", styleId: "sst"
+    layerId: "nasa-sat-global-sst", styleId: "sst"
   },
   "ncep-gfs-global-mslp-si": {
     layerId: "ncep-gfs-global-mslp", styleId: "pressure-mono"
   },
   "ncep-gfs-global-wind-barbs": {
-    layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-barbs"
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-barbs"
   },
   "ncep-gfs-global-wind-knots": {
-    layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-msl-classic"
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-msl-classic"
   },
   "ncep-gfs-global-temp-si": {
-    layerId: "ncep-gfs-global-temp", styleId: "temperature-msl-classic"
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-msl-classic"
   },
   "ncep-gfs-global-temp-uscs": {
-    layerId: "ncep-gfs-global-temp", styleId: "temperature-fahrenheit"
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-fahrenheit"
   },
   "ncep-gfs-global-temp-2m-uscs": {
-    layerId: "ncep-gfs-global-temp-2m", styleId: "temperature-fahrenheit"
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-fahrenheit"
   },
   "ncep-gfs-global-temp-2m-si": {
-    layerId: "ncep-gfs-global-temp-2m", styleId: "temperature-msl-classic"
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-msl-classic"
   },
   "ncep-gfs-global-rain-uscs": {
-    layerId: "ncep-gfs-global-rain", styleId: "precip-rate-uscs"
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-uscs"
   },
   "ncep-gfs-global-rain-si": {
-    layerId: "ncep-gfs-global-rain", styleId: "precip-rate-si"
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-si"
   },
   "ncep-mww3-global-hs-uscs": {
     layerId: "ncep-mww3-global-hs", styleId: "hs-uscs"
@@ -69491,22 +69496,22 @@ const CONCORDANCE = {
     layerId: "ncep-ndfd-us-temp", styleId: "temperature-fahrenheit"
   },
   "ncep-ndfd-us-tcw34i-prob": {
-    layerId: "ncep-ndfd-us-tcw34i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw34i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw34c-prob": {
-    layerId: "ncep-ndfd-us-tcw34c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw34c", styleId: "probability"
   },
   "ncep-ndfd-us-tcw50i-prob": {
-    layerId: "ncep-ndfd-us-tcw50i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw50i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw50c-prob": {
-    layerId: "ncep-ndfd-us-tcw50c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw50c", styleId: "probability"
   },
   "ncep-ndfd-us-tcw64i-prob": {
-    layerId: "ncep-ndfd-us-tcw64i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw64i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw64c-prob": {
-    layerId: "ncep-ndfd-us-tcw64c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw64c", styleId: "probability"
   },
   "ncep-rtma-us-temp-uscs": {
     layerId: "ncep-rtma-us-temp", styleId: "temperature-fahrenheit"
@@ -69518,10 +69523,10 @@ const CONCORDANCE = {
     layerId: "ncep-ndfd-us-wind", styleId: "wind-speed-direction-filled"
   },
   "ncep-rtma-us-windgust-knots": {
-    layerId: "ncep-rtma-us-wgust", styleId: "wind-speed-equal-mag-direction-filled"
+    layerId: "ncep-rtma-us-wgust10m", styleId: "wind-speed-equal-mag-direction-filled"
   },
   "ncep-rtma-us-cloud-cover": {
-    layerId: "ncep-rtma-us-cloud-cover", styleId: "cloud-cover"
+    layerId: "ncep-rtma-us-cloudcover", styleId: "cloud-cover"
   },
   "ncep-mrms-us-reflectivity-dbz": {
     layerId: "ncep-mrms-us-reflectivity", styleId: "reflectivity"

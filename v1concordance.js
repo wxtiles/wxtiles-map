@@ -1,33 +1,33 @@
 const CONCORDANCE = {
   "sat-sst": {
-    layerId: "sat-sst", styleId: "sst"
+    layerId: "nasa-sat-global-sst", styleId: "sst"
   },
   "ncep-gfs-global-mslp-si": {
     layerId: "ncep-gfs-global-mslp", styleId: "pressure-mono"
   },
   "ncep-gfs-global-wind-barbs": {
-    layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-barbs"
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-barbs"
   },
   "ncep-gfs-global-wind-knots": {
-    layerId: "ncep-gfs-global-wind", styleId: "wind-speed-direction-msl-classic"
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-msl-classic"
   },
   "ncep-gfs-global-temp-si": {
-    layerId: "ncep-gfs-global-temp", styleId: "temperature-msl-classic"
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-msl-classic"
   },
   "ncep-gfs-global-temp-uscs": {
-    layerId: "ncep-gfs-global-temp", styleId: "temperature-fahrenheit"
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-fahrenheit"
   },
   "ncep-gfs-global-temp-2m-uscs": {
-    layerId: "ncep-gfs-global-temp-2m", styleId: "temperature-fahrenheit"
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-fahrenheit"
   },
   "ncep-gfs-global-temp-2m-si": {
-    layerId: "ncep-gfs-global-temp-2m", styleId: "temperature-msl-classic"
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-msl-classic"
   },
   "ncep-gfs-global-rain-uscs": {
-    layerId: "ncep-gfs-global-rain", styleId: "precip-rate-uscs"
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-uscs"
   },
   "ncep-gfs-global-rain-si": {
-    layerId: "ncep-gfs-global-rain", styleId: "precip-rate-si"
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-si"
   },
   "ncep-mww3-global-hs-uscs": {
     layerId: "ncep-mww3-global-hs", styleId: "hs-uscs"
@@ -63,22 +63,22 @@ const CONCORDANCE = {
     layerId: "ncep-ndfd-us-temp", styleId: "temperature-fahrenheit"
   },
   "ncep-ndfd-us-tcw34i-prob": {
-    layerId: "ncep-ndfd-us-tcw34i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw34i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw34c-prob": {
-    layerId: "ncep-ndfd-us-tcw34c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw34c", styleId: "probability"
   },
   "ncep-ndfd-us-tcw50i-prob": {
-    layerId: "ncep-ndfd-us-tcw50i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw50i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw50c-prob": {
-    layerId: "ncep-ndfd-us-tcw50c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw50c", styleId: "probability"
   },
   "ncep-ndfd-us-tcw64i-prob": {
-    layerId: "ncep-ndfd-us-tcw64i-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw64i", styleId: "probability"
   },
   "ncep-ndfd-us-tcw64c-prob": {
-    layerId: "ncep-ndfd-us-tcw64c-prob", styleId: "probability"
+    layerId: "ncep-ndfd-us-tcw64c", styleId: "probability"
   },
   "ncep-rtma-us-temp-uscs": {
     layerId: "ncep-rtma-us-temp", styleId: "temperature-fahrenheit"
@@ -90,10 +90,10 @@ const CONCORDANCE = {
     layerId: "ncep-ndfd-us-wind", styleId: "wind-speed-direction-filled"
   },
   "ncep-rtma-us-windgust-knots": {
-    layerId: "ncep-rtma-us-wgust", styleId: "wind-speed-equal-mag-direction-filled"
+    layerId: "ncep-rtma-us-wgust10m", styleId: "wind-speed-equal-mag-direction-filled"
   },
   "ncep-rtma-us-cloud-cover": {
-    layerId: "ncep-rtma-us-cloud-cover", styleId: "cloud-cover"
+    layerId: "ncep-rtma-us-cloudcover", styleId: "cloud-cover"
   },
   "ncep-mrms-us-reflectivity-dbz": {
     layerId: "ncep-mrms-us-reflectivity", styleId: "reflectivity"
