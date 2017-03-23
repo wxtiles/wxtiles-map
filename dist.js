@@ -33,8 +33,8 @@ var v1transform = require('./v1concordance')
 var jsongString = atob(window.location.href.split('?datums=')[1])
 var jsonDatums = JSON.parse(jsongString)
 
-// var wxTilesDotCom = 'https://api.wxtiles.com/v1'
-var wxTilesDotCom = 'http://172.16.1.50/v1'
+var wxTilesDotCom = 'https://api.wxtiles.com/v1'
+// var wxTilesDotCom = 'http://172.16.1.50/v1'
 
 var moment = require('moment-timezone')
 console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, styleId, opacity, and zindex
@@ -53,7 +53,6 @@ jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
     layer.id = concordance.layerId
     layer.styleId = concordance.styleId
   }
-  console.log(layer)
   return layer
 })
 
@@ -504,8 +503,8 @@ module.exports = timeSlider
 },{"humanize-duration":11,"lodash":169,"moment-timezone":180,"rc-slider":269,"react":615}],7:[function(require,module,exports){
 var request = require('superagent')
 var _ = require('lodash')
-// const server = 'https://api.wxtiles.com/v1';
-const server = 'http://172.16.1.50/v1';
+const server = 'https://api.wxtiles.com/v1';
+// const server = 'http://172.16.1.50/v1';
 
 // /<ownerID>/layer/
 var getAllLayers = (apikey, onSuccess, onError) => {
