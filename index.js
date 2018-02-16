@@ -2,14 +2,19 @@ var React = require('react')
 var ReactDOM = require('react-dom')
 var request = require('superagent')
 var _ = require('lodash')
-var jsongString = atob(window.location.href.split('?datums=')[1])
-var jsonDatums = JSON.parse(jsongString)
+
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
-var wxTilesDotCom = 'https://api.wxtiles.com/'
-// var wxTilesDotCom = 'http://172.16.1.15/'
+var v1transform = require('./v1concordance')
+
+var jsongString = atob(window.location.href.split('?datums=')[1])
+var jsonDatums = JSON.parse(jsongString)
+
+var wxTilesDotCom = 'https://api.wxtiles.com/v1'
+// var wxTilesDotCom = 'http://172.16.1.50/v1'
+
 var moment = require('moment-timezone')
-console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
+console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, styleId, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.center = {
     lat: 1, lng: 105
@@ -19,6 +24,14 @@ if(!jsonDatums.mapDatums.center) {
 if(!jsonDatums.mapDatums.animationFrameMinutes) {
   jsonDatums.mapDatums.animationFrameMinutes = 30 // TODO make function of available times
 }
+jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
+  if (!layer.styleId) {
+    var concordance = v1transform(layer.id)
+    layer.id = concordance.layerId
+    layer.styleId = concordance.styleId
+  }
+  return layer
+})
 
 function degradeArray(array, options) {
   _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
@@ -47,25 +60,28 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
       zIndex: mapDatumsLayer.zIndex,
-      apikey: jsonDatums.apiKey
+      apikey: jsonDatums.apiKey,
+      styleId: mapDatumsLayer.styleId // May be undefined
     }
     request
-      .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
-      // .set('apikey', jsonDatums.apiKey) // Set API key
+      .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
+      .set('apikey', jsonDatums.apiKey)
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
         layer.instanceId = instances[0].id
-        layer.label = responseForLayer.meta.name
-        layer.description = responseForLayer.meta.description
+        layer.label = responseForLayer.name
+        layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
-        layer.minZoom = responseForLayer.minNativeZoom,
-        layer.maxNativeZoom = responseForLayer.maxNativeZoom,
+        layer.minZoom = responseForLayer.minNativeZoom
+        layer.maxNativeZoom = responseForLayer.maxNativeZoom
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
+        layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
+        layer.styles = responseForLayer.styles
         request
-          .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
-          // .set('apikey', layer.apiKey) // Set API key
+          .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .set('apikey', jsonDatums.apiKey)
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
@@ -83,6 +99,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
             wxtilesjs.getAllTileLayerUrls({
               layerId: layer.id,
               instanceId: layer.instanceId,
+              styleId: layer.styleId,
               times,
               level: 0,
               apikey: layer.apikey,

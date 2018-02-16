@@ -25,14 +25,19 @@ var React = require('react')
 var ReactDOM = require('react-dom')
 var request = require('superagent')
 var _ = require('lodash')
-var jsongString = atob(window.location.href.split('?datums=')[1])
-var jsonDatums = JSON.parse(jsongString)
+
 var wxtilesjs = require('./mapOverlay/wxtiles')
 var root = require('./root')
-var wxTilesDotCom = 'https://api.wxtiles.com/'
-// var wxTilesDotCom = 'http://172.16.1.15/'
+var v1transform = require('./v1concordance')
+
+var jsongString = atob(window.location.href.split('?datums=')[1])
+var jsonDatums = JSON.parse(jsongString)
+
+var wxTilesDotCom = 'https://api.wxtiles.com/v1'
+// var wxTilesDotCom = 'http://172.16.1.50/v1'
+
 var moment = require('moment-timezone')
-console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, opacity, and zindex
+console.log(jsonDatums, Object.keys(jsonDatums.mapDatums), jsonDatums.mapDatums.layers) // zoom, center, layers; a layer has id, styleId, opacity, and zindex
 if(!jsonDatums.mapDatums.center) {
   jsonDatums.mapDatums.center = {
     lat: 1, lng: 105
@@ -42,6 +47,14 @@ if(!jsonDatums.mapDatums.center) {
 if(!jsonDatums.mapDatums.animationFrameMinutes) {
   jsonDatums.mapDatums.animationFrameMinutes = 30 // TODO make function of available times
 }
+jsonDatums.mapDatums.layers = _.map(jsonDatums.mapDatums.layers, (layer) => {
+  if (!layer.styleId) {
+    var concordance = v1transform(layer.id)
+    layer.id = concordance.layerId
+    layer.styleId = concordance.styleId
+  }
+  return layer
+})
 
 function degradeArray(array, options) {
   _.defaults(options, {fromLeftSide: false, maxLength: 30, retainEnds: true})
@@ -70,25 +83,28 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
       id: mapDatumsLayer.id,
       opacity: mapDatumsLayer.opacity,
       zIndex: mapDatumsLayer.zIndex,
-      apikey: jsonDatums.apiKey
+      apikey: jsonDatums.apiKey,
+      styleId: mapDatumsLayer.styleId // May be undefined
     }
     request
-      .get(wxTilesDotCom + 'v0/wxtiles/layer/' + mapDatumsLayer.id)
-      // .set('apikey', jsonDatums.apiKey) // Set API key
+      .get(wxTilesDotCom + '/wxtiles/layer/' + mapDatumsLayer.id)
+      .set('apikey', jsonDatums.apiKey)
       .end((err, res) => {
         var responseForLayer = res.body
         var instances = _.sortBy(responseForLayer.instances, (instance) => { return instance.displayName }).reverse()
         layer.instanceId = instances[0].id
-        layer.label = responseForLayer.meta.name
-        layer.description = responseForLayer.meta.description
+        layer.label = responseForLayer.name
+        layer.description = responseForLayer.description
         layer.bounds = responseForLayer.bounds
-        layer.minZoom = responseForLayer.minNativeZoom,
-        layer.maxNativeZoom = responseForLayer.maxNativeZoom,
+        layer.minZoom = responseForLayer.minNativeZoom
+        layer.maxNativeZoom = responseForLayer.maxNativeZoom
         layer.isVisible = true
         layer.instanceType = responseForLayer.instanceType
+        layer.styleId = layer.styleId ? layer.styleId : responseForLayer.defaults.style
+        layer.styles = responseForLayer.styles
         request
-          .get(wxTilesDotCom + 'v0/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
-          // .set('apikey', layer.apiKey) // Set API key
+          .get(wxTilesDotCom + '/wxtiles/layer/' + layer.id + '/instance/' + layer.instanceId)
+          .set('apikey', jsonDatums.apiKey)
           .end((err, res) => {
             var times = res.body.times
             var acceptTimeUrls = (timeUrls) => {
@@ -106,6 +122,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
             wxtilesjs.getAllTileLayerUrls({
               layerId: layer.id,
               instanceId: layer.instanceId,
+              styleId: layer.styleId,
               times,
               level: 0,
               apikey: layer.apikey,
@@ -123,7 +140,7 @@ Promise.all(_.map(jsonDatums.mapDatums.layers, (mapDatumsLayer) => {
   ReactDOM.render(React.createElement(root, {mapOptions}), mount)
 })
 
-},{"./mapOverlay/wxtiles":7,"./root":621,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410,"superagent":616}],3:[function(require,module,exports){
+},{"./mapOverlay/wxtiles":7,"./root":621,"./v1concordance":622,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410,"superagent":616}],3:[function(require,module,exports){
 var React = require('react')
 var ReactDOM = require('react-dom')
 var legends = require('./mapOverlay/legends')
@@ -170,9 +187,11 @@ class mapOverlay extends React.Component {
 
   updateVisibleLayers({layers}) {
     var mapOptions = this.props.mapOptions
-    _.forEach(mapOptions.layers, (stateFulLayer) => {
+    _.forEach(mapOptions.layers, (statefulLayer) => {
       _.forEach(layers, (legendLayer) => {
-        if (legendLayer.layerId == stateFulLayer.id) stateFulLayer.isVisible = legendLayer.isVisible
+        if ((legendLayer.layerId == statefulLayer.id) && (legendLayer.styleId == statefulLayer.styleId)) {
+          statefulLayer.isVisible = legendLayer.isVisible
+        }
       })
     })
     this.props.update({mapOptions})
@@ -187,9 +206,10 @@ class mapOverlay extends React.Component {
         label: layer.label,
         url: layer.legendUrl,
         layerId: layer.id,
-        instanceId: layer.instanceId,
+        styleId: layer.styleId,
         isVisible: layer.isVisible,
         description: layer.description,
+        styles: layer.styles,
         apikey: layer.apikey
       }
     })
@@ -241,7 +261,7 @@ class legend extends React.Component {
   componentWillMount() {
     wxtilesjs.getLegendUrl({
       layerId: this.props.layerId,
-      instanceId: this.props.instanceId,
+      styleId: this.props.styleId,
       apikey: this.props.apikey,
       onSuccess: (legendUrl) => {
         this.setState({url: legendUrl})
@@ -253,8 +273,8 @@ class legend extends React.Component {
   }
 
   toggleSwitch() {
-    if(this.props.isChecked) this.props.unCheck({layerId: this.props.layerId})
-    if(!this.props.isChecked) this.props.check({layerId: this.props.layerId})
+    if(this.props.isChecked) this.props.unCheck({layerId: this.props.layerId, styleId: this.props.styleId})
+    if(!this.props.isChecked) this.props.check({layerId: this.props.layerId, styleId: this.props.styleId})
   }
 
   loadingError() {
@@ -262,11 +282,17 @@ class legend extends React.Component {
   }
 
   render() {
-    var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
+    // var popoverTitle = React.createElement('span', {className: 'legendPopoverTitle'}, this.props.label)
     return React.createElement('div', {className: 'legend'},
       React.createElement('div', {},
-        React.createElement('div', {className: 'layerLabel'}, this.props.label),
-        React.createElement(rcPopover, {title: popoverTitle, content: this.props.description, trigger: 'click'},
+        React.createElement('div', {className: 'legendText'},
+          React.createElement('div', {className: 'layerLabel'}, this.props.label),
+          React.createElement('div', {className: 'styleLabel'}, this.props.style.name)
+        ),
+        React.createElement(rcPopover, {
+          title: this.props.description || this.props.label, //popoverTitle, // TODO style description?
+          content: this.props.style.description || this.props.style.label || '',
+          trigger: 'click'},
           React.createElement('a', {href: 'javascript:void(0);', className: 'description glyphicon glyphicon-question-sign'})
         )
       ),
@@ -315,18 +341,22 @@ class legends extends React.Component {
     this.setState({showLegends: false})
   }
 
-  check({layerId}) {
+  check({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = true
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = true
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
 
-  unCheck({layerId}) {
+  unCheck({layerId, styleId}) {
     var layers = this.props.legends
     _.forEach(layers, (layer) => {
-      if(layer.layerId == layerId) layer.isVisible = false
+      if ((layer.layerId == layerId) && (layer.styleId == styleId)) {
+        layer.isVisible = false
+      }
     })
     this.props.updateVisibleLayers({layers})
   }
@@ -338,16 +368,17 @@ class legends extends React.Component {
         this.state.showLegends && React.createElement('a', {href: 'javascript:void(0);', onClick: this.hideLegends}, 'Hide legends')
       ),
       this.state.showLegends && _.map(this.props.legends, (legendDatums) => {
-        return React.createElement('div', {key: legendDatums.layerId + ' ' + legendDatums.instanceId},
+        return React.createElement('div', {key: [legendDatums.layerId, legendDatums.styleId].join(' ')},
           React.createElement(legend, {
             apikey: legendDatums.apikey,
             layerId: legendDatums.layerId,
-            instanceId: legendDatums.instanceId,
+            styleId: legendDatums.styleId,
             label: legendDatums.label,
             isChecked: legendDatums.isVisible,
             check: this.check,
             unCheck: this.unCheck,
-            description: legendDatums.description
+            description: legendDatums.description,
+            style: _.find(legendDatums.styles, (style) => {return style.id == legendDatums.styleId})
           })
         )
       }),
@@ -472,23 +503,24 @@ module.exports = timeSlider
 },{"humanize-duration":11,"lodash":169,"moment-timezone":180,"rc-slider":269,"react":615}],7:[function(require,module,exports){
 var request = require('superagent')
 var _ = require('lodash')
-const server = 'https://api.wxtiles.com/v0';
-// const server = 'http://172.16.1.15/v0';
-
+const server = 'https://api.wxtiles.com/v1';
+// const server = 'http://172.16.1.50/v1';
 
 // /<ownerID>/layer/
-var getAllLayers = (onSuccess, onError) => {
+var getAllLayers = (apikey, onSuccess, onError) => {
   request
     .get(`${server}/wxtiles/layer/`)
+    .set('apikey', apikey)
     .end((err, res) => {
       if (err) return onError(err)
       onSuccess(JSON.parse(res.text))
     })
 }
 
-var getInstance = ({layerId, instanceId, onSuccess, onError}) => {
+var getInstance = ({apikey, layerId, instanceId, onSuccess, onError}) => {
   request
     .get(`${server}/wxtiles/layer/${layerId}/instance/${instanceId}/`)
+    .set('apikey', apikey)
     .end((err, res) => {
       if (err) return onError(err)
       onSuccess(res.body)
@@ -499,6 +531,7 @@ var getInstance = ({layerId, instanceId, onSuccess, onError}) => {
 var getTimesForInstance = (options) => {
   request
     .get(`${server}/wxtiles/layer/${options.layerId}/instance/${options.instanceId}/times/`)
+    .set('apikey', options.apikey)
     .end((err, res) => {
       if (err) return options.onError(err)
       options.onSuccess(JSON.parse(res.text))
@@ -509,6 +542,7 @@ var getTimesForInstance = (options) => {
 var getLevelsForInstance = (options) => {
   request
     .get(`${server}/wxtiles/layer/${options.layerId}/instance/${options.instanceId}/levels/`)
+    .set('apikey', options.apikey)
     .end((err, res) => {
       if (err) return options.onError(err)
       options.onSuccess(JSON.parse(res.text))
@@ -516,20 +550,20 @@ var getLevelsForInstance = (options) => {
 }
 
 // /<ownerID>/tile/<layerID>/<instanceID>/<time>/<level>/<z>/<x>/<y>.<extension>
-var getTileLayerUrl = ({layerId, instanceId, time, level, apikey, onSuccess, onError}) => {
+var getTileLayerUrl = ({apikey, layerId, styleId, instanceId, time, level, onSuccess, onError}) => {
   level = level || 0
   time = time || 0
-  onSuccess(`${server}/wxtiles/tile/${layerId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
+  onSuccess(`${server}/wxtiles/tile/${layerId}/${styleId}/${instanceId}/${time}/${level}/{z}/{x}/{y}.png?apikey=${apikey}`)
 }
 
-var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess, onError}) => {
+var getAllTileLayerUrls = ({apikey, layerId, styleId, instanceId, times, level, onSuccess, onError}) => {
   var urls = []
   Promise.all(_.map(times, (time) => {
     return new Promise((resolve, reject) => {
       var scopedSuccess = (url) => {
         resolve({time, url})
       }
-      getTileLayerUrl({layerId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
+      getTileLayerUrl({layerId, styleId, instanceId, time, level, apikey, onSuccess: scopedSuccess, onError})
     })
   })).then((timeUrls) => {
     onSuccess(timeUrls)
@@ -537,8 +571,8 @@ var getAllTileLayerUrls = ({layerId, instanceId, times, level, apikey, onSuccess
 }
 
 // https://api.wxtiles.com/v0/{ownerId}/legend/{layerId}/{instanceId}/{size}/{orientation}.png
-var getLegendUrl = ({layerId, instanceId, apikey, onSuccess, onError}) => {
-  onSuccess(`${server}/wxtiles/legend/${layerId}/${instanceId}/small/horizontal.png?apikey=${apikey}`)
+var getLegendUrl = ({apikey, layerId, styleId, onSuccess, onError}) => {
+  onSuccess(`${server}/wxtiles/legend/${layerId}/${styleId}/small/horizontal.png?apikey=${apikey}`)
 }
 
 
@@ -69395,4 +69429,198 @@ class root extends React.Component {
 
 module.exports = root
 
-},{"./mapOverlay":3,"./mapWrapper":8,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410}]},{},[2]);
+},{"./mapOverlay":3,"./mapWrapper":8,"lodash":169,"moment-timezone":180,"react":615,"react-dom":410}],622:[function(require,module,exports){
+const CONCORDANCE = {
+  "sat-sst": {
+    layerId: "nasa-sat-global-sst", styleId: "sst"
+  },
+  "ncep-gfs-global-mslp-si": {
+    layerId: "ncep-gfs-global-mslp", styleId: "pressure-mono"
+  },
+  "ncep-gfs-global-wind-barbs": {
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-barbs"
+  },
+  "ncep-gfs-global-wind-knots": {
+    layerId: "ncep-gfs-global-wind10m", styleId: "wind-speed-direction-msl-classic"
+  },
+  "ncep-gfs-global-temp-si": {
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-msl-classic"
+  },
+  "ncep-gfs-global-temp-uscs": {
+    layerId: "ncep-gfs-global-tempsfc", styleId: "temperature-fahrenheit"
+  },
+  "ncep-gfs-global-temp-2m-uscs": {
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-fahrenheit"
+  },
+  "ncep-gfs-global-temp-2m-si": {
+    layerId: "ncep-gfs-global-temp2m", styleId: "temperature-msl-classic"
+  },
+  "ncep-gfs-global-rain-uscs": {
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-uscs"
+  },
+  "ncep-gfs-global-rain-si": {
+    layerId: "ncep-gfs-global-precip", styleId: "precip-rate-si"
+  },
+  "ncep-mww3-global-hs-uscs": {
+    layerId: "ncep-mww3-global-hs", styleId: "hs-uscs"
+  },
+  "ncep-mww3-global-hs-si": {
+    layerId: "ncep-mww3-global-hs", styleId: "hs-si"
+  },
+  "ncep-mww3-global-tp-si": {
+    layerId: "ncep-mww3-global-tp", styleId: "wave-period"
+  },
+  "ncep-mww3-global-dpm-dir": {
+    layerId: "ncep-mww3-global-dpm", styleId: "direction"
+  },
+  "ncep-ndfd-us-windspd-knots": {
+    layerId: "ncep-ndfd-us-wind", styleId: "wind-speed-equal-mag-direction-filled"
+  },
+  "ncep-ndfd-us-windgust-knots": {
+    layerId: "ncep-ndfd-us-wgust", styleId: "wind-speed-filled"
+  },
+  "ncep-ndfd-us-winddir": {
+    layerId: "ncep-ndfd-us-wind", styleId: "direction-alt"
+  },
+  "ncep-ndfd-us-dpt-uscs": {
+    layerId: "ncep-ndfd-us-dpt", styleId: "dewpoint-temperature-uscs"
+  },
+  "ncep-ndfd-us-precip-uscs": {
+    layerId: "ncep-ndfd-us-precip", styleId: "precip-rate-uscs"
+  },
+  "ncep-ndfd-us-snow-uscs": {
+    layerId: "ncep-ndfd-us-snow", styleId: "snow-depth-in"
+  },
+  "ncep-ndfd-us-temp-uscs": {
+    layerId: "ncep-ndfd-us-temp", styleId: "temperature-fahrenheit"
+  },
+  "ncep-ndfd-us-tcw34i-prob": {
+    layerId: "ncep-ndfd-us-tcw34i", styleId: "probability"
+  },
+  "ncep-ndfd-us-tcw34c-prob": {
+    layerId: "ncep-ndfd-us-tcw34c", styleId: "probability"
+  },
+  "ncep-ndfd-us-tcw50i-prob": {
+    layerId: "ncep-ndfd-us-tcw50i", styleId: "probability"
+  },
+  "ncep-ndfd-us-tcw50c-prob": {
+    layerId: "ncep-ndfd-us-tcw50c", styleId: "probability"
+  },
+  "ncep-ndfd-us-tcw64i-prob": {
+    layerId: "ncep-ndfd-us-tcw64i", styleId: "probability"
+  },
+  "ncep-ndfd-us-tcw64c-prob": {
+    layerId: "ncep-ndfd-us-tcw64c", styleId: "probability"
+  },
+  "ncep-rtma-us-temp-uscs": {
+    layerId: "ncep-rtma-us-temp", styleId: "temperature-fahrenheit"
+  },
+  "ncep-rtma-us-dpt-uscs": {
+    layerId: "ncep-rtma-us-dpt", styleId: "dewpoint-temperature-uscs"
+  },
+  "ncep-rtma-us-windspd-knots": {
+    layerId: "ncep-ndfd-us-wind", styleId: "wind-speed-direction-filled"
+  },
+  "ncep-rtma-us-windgust-knots": {
+    layerId: "ncep-rtma-us-wgust10m", styleId: "wind-speed-equal-mag-direction-filled"
+  },
+  "ncep-rtma-us-cloud-cover": {
+    layerId: "ncep-rtma-us-cloudcover", styleId: "cloud-cover"
+  },
+  "ncep-mrms-us-reflectivity-dbz": {
+    layerId: "ncep-mrms-us-reflectivity", styleId: "reflectivity"
+  },
+  "ncep-mrms-us-lightning-prob": {
+    layerId: "ncep-mrms-us-lightning", styleId: "probability"
+  },
+  "ncep-mrms-us-rotationtrack30-si": {
+    layerId: "ncep-mrms-us-rotationtrack30", styleId: "rotation"
+  },
+  "ncep-mrms-us-rotationtrack60-si": {
+    layerId: "ncep-mrms-us-rotationtrack60", styleId: "rotation"
+  },
+  "ncep-mrms-us-rotationtrack120-si": {
+    layerId: "ncep-mrms-us-rotationtrack120", styleId: "rotation"
+  },
+  "ncep-mrms-us-rotationtrack240-si": {
+    layerId: "ncep-mrms-us-rotationtrack240", styleId: "rotation"
+  },
+  "ncep-mrms-us-rotationtrack1440-si": {
+    layerId: "ncep-mrms-us-rotationtrack1440", styleId: "rotation"
+  },
+  "ncep-mrms-us-mesh30-uscs": {
+    layerId: "ncep-mrms-us-mesh30", styleId: "mesh"
+  },
+  "ncep-mrms-us-mesh60-uscs": {
+    layerId: "ncep-mrms-us-mesh60", styleId: "mesh"
+  },
+  "ncep-mrms-us-mesh120-uscs": {
+    layerId: "ncep-mrms-us-mesh120", styleId: "mesh"
+  },
+  "ncep-mrms-us-mesh1440-uscs": {
+    layerId: "ncep-mrms-us-mesh1440", styleId: "mesh"
+  },
+  "ncep-mrms-us-qpe01-uscs": {
+    layerId: "ncep-mrms-us-qpe01", styleId: "precip-12h-accumulation"
+  },
+  "ncep-mrms-us-qpe03-uscs": {
+    layerId: "ncep-mrms-us-qpe03", styleId: "precip-12h-accumulation"
+  },
+  "ncep-mrms-us-qpe06-uscs": {
+    layerId: "ncep-mrms-us-qpe06", styleId: "precip-12h-accumulation"
+  },
+  "ncep-mrms-us-qpe12-uscs": {
+    layerId: "ncep-mrms-us-qpe12", styleId: "precip-12h-accumulation"
+  },
+  "ncep-mrms-us-qpe24-uscs": {
+    layerId: "ncep-mrms-us-qpe24", styleId: "precip-12h-accumulation"
+  },
+  "ncep-hrrr-us-tcolg-si": {
+    layerId: "ncep-hrrr-us-tcolg", styleId: "tcolg-si"
+  },
+  "ncep-hrrr-us-reflectivity-dbz": {
+    layerId: "ncep-hrrr-us-reflectivity", styleId: "reflectivity"
+  },
+  "ncep-hrrr-us-lightning-prob": {
+    layerId: "ncep-hrrr-us-lightning", styleId: "probability"
+  },
+  "noaa-goes-tige01-us-visible": {
+    layerId: "noaa-goes-tige01-us-visible", styleId: "goes-visible"
+  },
+  "noaa-goes-tigw01-us-visible": {
+    layerId: "noaa-goes-tigw01-us-visible", styleId: "goes-visible"
+  },
+  "noaa-goes-tige02-us-infrared-11": {
+    layerId: "noaa-goes-tige02-us-infrared-11", styleId: "goes-infrared"
+  },
+  "noaa-goes-tigw02-us-infrared-11": {
+    layerId: "noaa-goes-tigw02-us-infrared-11", styleId: "goes-infrared"
+  },
+  "noaa-goes-tige04-us-infrared-3-9": {
+    layerId: "noaa-goes-tige04-us-infrared-3-9", styleId: "goes-infrared"
+  },
+  "noaa-goes-tigw04-us-infrared-3-9": {
+    layerId: "noaa-goes-tigw04-us-infrared-3-9", styleId: "goes-infrared"
+  },
+  "noaa-goes-tige05-us-water-vapour": {
+    layerId: "noaa-goes-tige05-us-water-vapour", styleId: "goes-vapour"
+  },
+  "noaa-goes-tigw05-us-water-vapour": {
+    layerId: "noaa-goes-tigw05-us-water-vapour", styleId: "goes-vapour"
+  },
+  "noaa-goes-tige06-us-infrared-13": {
+    layerId: "noaa-goes-tige06-us-infrared-13", styleId: "goes-infrared"
+  },
+  "noaa-goes-tigw06-us-infrared-13": {
+    layerId: "noaa-goes-tigw06-us-infrared-13", styleId: "goes-infrared"
+  }
+}
+
+var v1transform = function (layerId) {
+  var concord = CONCORDANCE[layerId]
+  return concord ? concord : {layerId: layerId, styleId: undefined}
+}
+
+module.exports = v1transform
+
+},{}]},{},[2]);

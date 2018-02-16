@@ -14,6 +14,7 @@
   top: 30px;
   border-radius: 5px;
   text-align: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 .legends .wxtilesPlug {
   border-top: 1px solid #bbb;
@@ -42,10 +43,19 @@
 .legend .hideMeh {
   display: none;
 }
-.legend .layerLabel {
+.legend .legendText {
   display: inline-block;
+  max-width: 315px;
+}
+.legend .layerLabel {
   word-wrap: break-word;
   max-width: 315px;
+}
+.legend .styleLabel {
+  font-size: smaller;
+  color: #176097;
+  max-width: 270px;
+  word-wrap: break-word;
 }
 .legend .description {
   float: right;
@@ -55,8 +65,20 @@
 .legendPopoverTitle {
   font-weight: bold;
 }
-.ant-popover-inner {
+.ant-popover {
+  max-width: 500px;
+}
+.ant-popover .ant-popover-title {
+  font-weight: bold;
+  height: auto;
+  line-height: inherit;
+  min-height: 34px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.ant-popover .ant-popover-inner {
   min-width: 200px;
+  margin-right: 5px;
 }
 .map {
   width: 100%;
@@ -69,6 +91,7 @@
   padding: 20px;
   padding-bottom: 5px;
   text-align: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 .timeSlider .reactSliderContainer {
   width: 100%;

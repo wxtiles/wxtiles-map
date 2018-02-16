@@ -44,9 +44,11 @@ class mapOverlay extends React.Component {
 
   updateVisibleLayers({layers}) {
     var mapOptions = this.props.mapOptions
-    _.forEach(mapOptions.layers, (stateFulLayer) => {
+    _.forEach(mapOptions.layers, (statefulLayer) => {
       _.forEach(layers, (legendLayer) => {
-        if (legendLayer.layerId == stateFulLayer.id) stateFulLayer.isVisible = legendLayer.isVisible
+        if ((legendLayer.layerId == statefulLayer.id) && (legendLayer.styleId == statefulLayer.styleId)) {
+          statefulLayer.isVisible = legendLayer.isVisible
+        }
       })
     })
     this.props.update({mapOptions})
@@ -61,9 +63,10 @@ class mapOverlay extends React.Component {
         label: layer.label,
         url: layer.legendUrl,
         layerId: layer.id,
-        instanceId: layer.instanceId,
+        styleId: layer.styleId,
         isVisible: layer.isVisible,
         description: layer.description,
+        styles: layer.styles,
         apikey: layer.apikey
       }
     })
